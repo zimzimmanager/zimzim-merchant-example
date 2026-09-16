@@ -2,76 +2,76 @@
 // Zim-Zim Merchant API — Pure Frontend JavaScript Application (No Backend)
 // ============================================================================
 
-const API_BASE_URL = 'https://api-kafe.zim-zim.uz/api/v1/merchant';
+const API_BASE_URL = "https://api-kafe.zim-zim.uz/api/v1/merchant";
 
-let currentApiKey = localStorage.getItem('zimzim_api_key') || '';
+let currentApiKey = localStorage.getItem("zimzim_api_key") || "";
 let currentProducts = [];
 let currentCart = [];
 let currentActiveOrderId = null;
 
 // Console state
 let lastInspectorData = {
-  method: 'GET',
-  url: '/products?limit=8',
+  method: "GET",
+  url: "/products?limit=8",
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'X-Api-Key': currentApiKey || '<YOUR_TOKEN>',
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "X-Api-Key": currentApiKey || "<YOUR_TOKEN>",
   },
   requestBody: null,
-  responseStatus: '200 OK',
+  responseStatus: "200 OK",
   responseBody: {},
   latency: 35,
 };
-let activeConsoleTab = 'response';
+let activeConsoleTab = "response";
 
 // DOM Elements
-const apiKeyInput = document.getElementById('apiKeyInput');
-const saveKeyBtn = document.getElementById('saveKeyBtn');
-const toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
-const tokenStatusBar = document.getElementById('tokenStatusBar');
-const tokenStatusText = document.getElementById('tokenStatusText');
-const productCountBadge = document.getElementById('productCountBadge');
-const productsGrid = document.getElementById('productsGrid');
-const refreshProductsBtn = document.getElementById('refreshProductsBtn');
+const apiKeyInput = document.getElementById("apiKeyInput");
+const saveKeyBtn = document.getElementById("saveKeyBtn");
+const toggleKeyVisibility = document.getElementById("toggleKeyVisibility");
+const tokenStatusBar = document.getElementById("tokenStatusBar");
+const tokenStatusText = document.getElementById("tokenStatusText");
+const productCountBadge = document.getElementById("productCountBadge");
+const productsGrid = document.getElementById("productsGrid");
+const refreshProductsBtn = document.getElementById("refreshProductsBtn");
 
 // Console DOM
-const consoleMethod = document.getElementById('consoleMethod');
-const consoleUrl = document.getElementById('consoleUrl');
-const consoleStatus = document.getElementById('consoleStatus');
-const consoleOutput = document.getElementById('consoleOutput');
-const consoleLatency = document.getElementById('consoleLatency');
-const copyCurlBtn = document.getElementById('copyCurlBtn');
-const copyFetchBtn = document.getElementById('copyFetchBtn');
-const showResponseTab = document.getElementById('showResponseTab');
-const showRequestTab = document.getElementById('showRequestTab');
-const showHeadersTab = document.getElementById('showHeadersTab');
+const consoleMethod = document.getElementById("consoleMethod");
+const consoleUrl = document.getElementById("consoleUrl");
+const consoleStatus = document.getElementById("consoleStatus");
+const consoleOutput = document.getElementById("consoleOutput");
+const consoleLatency = document.getElementById("consoleLatency");
+const copyCurlBtn = document.getElementById("copyCurlBtn");
+const copyFetchBtn = document.getElementById("copyFetchBtn");
+const showResponseTab = document.getElementById("showResponseTab");
+const showRequestTab = document.getElementById("showRequestTab");
+const showHeadersTab = document.getElementById("showHeadersTab");
 
 // Tabs DOM
-const tabProductsBtn = document.getElementById('tabProductsBtn');
-const tabOrdersBtn = document.getElementById('tabOrdersBtn');
-const tabDictsBtn = document.getElementById('tabDictsBtn');
-const tabProducts = document.getElementById('tabProducts');
-const tabOrders = document.getElementById('tabOrders');
-const tabDicts = document.getElementById('tabDicts');
+const tabProductsBtn = document.getElementById("tabProductsBtn");
+const tabOrdersBtn = document.getElementById("tabOrdersBtn");
+const tabDictsBtn = document.getElementById("tabDictsBtn");
+const tabProducts = document.getElementById("tabProducts");
+const tabOrders = document.getElementById("tabOrders");
+const tabDicts = document.getElementById("tabDicts");
 
 // Modal DOM
-const addDishModal = document.getElementById('addDishModal');
-const openAddDishModalBtn = document.getElementById('openAddDishModalBtn');
-const closeAddDishModalBtn = document.getElementById('closeAddDishModalBtn');
-const cancelAddDishBtn = document.getElementById('cancelAddDishBtn');
-const submitAddDishBtn = document.getElementById('submitAddDishBtn');
-const newDishName = document.getElementById('newDishName');
-const newDishPrice = document.getElementById('newDishPrice');
-const newDishDesc = document.getElementById('newDishDesc');
+const addDishModal = document.getElementById("addDishModal");
+const openAddDishModalBtn = document.getElementById("openAddDishModalBtn");
+const closeAddDishModalBtn = document.getElementById("closeAddDishModalBtn");
+const cancelAddDishBtn = document.getElementById("cancelAddDishBtn");
+const submitAddDishBtn = document.getElementById("submitAddDishBtn");
+const newDishName = document.getElementById("newDishName");
+const newDishPrice = document.getElementById("newDishPrice");
+const newDishDesc = document.getElementById("newDishDesc");
 
 // Orders DOM
-const createOrderBtn = document.getElementById('createOrderBtn');
-const closeOrderBtn = document.getElementById('closeOrderBtn');
-const activeOrderBox = document.getElementById('activeOrderBox');
-const activeOrderId = document.getElementById('activeOrderId');
-const orderItemsList = document.getElementById('orderItemsList');
-const orderTotalAmount = document.getElementById('orderTotalAmount');
+const createOrderBtn = document.getElementById("createOrderBtn");
+const closeOrderBtn = document.getElementById("closeOrderBtn");
+const activeOrderBox = document.getElementById("activeOrderBox");
+const activeOrderId = document.getElementById("activeOrderId");
+const orderItemsList = document.getElementById("orderItemsList");
+const orderTotalAmount = document.getElementById("orderTotalAmount");
 
 function refreshIcons() {
   if (window.lucide) {
@@ -82,10 +82,12 @@ function refreshIcons() {
 // ── Update Token Status Bar UI ──
 function updateTokenBanner() {
   if (currentApiKey) {
-    tokenStatusBar.className = 'bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors';
+    tokenStatusBar.className =
+      "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
     tokenStatusText.innerHTML = `🟢 <b>API Token ulangan:</b> <span class="font-mono">${currentApiKey.slice(0, 10)}••••••••</span>. So'rovlar to'g'ridan-to'g'ri Zim-Zim API ga yo'naltirilmoqda.`;
   } else {
-    tokenStatusBar.className = 'bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors';
+    tokenStatusBar.className =
+      "bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
     tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting va "Saqlash" tugmasini bosing.`;
   }
 }
@@ -96,12 +98,12 @@ async function callApi(method, path, body = null) {
   const fullUrl = `${API_BASE_URL}${path}`;
 
   const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
   };
 
   if (currentApiKey) {
-    headers['X-Api-Key'] = currentApiKey;
+    headers["X-Api-Key"] = currentApiKey;
   }
 
   try {
@@ -109,7 +111,7 @@ async function callApi(method, path, body = null) {
       method,
       headers,
       body: body ? JSON.stringify(body) : null,
-      mode: 'cors',
+      mode: "cors",
     });
 
     const latency = Date.now() - startTime;
@@ -125,7 +127,7 @@ async function callApi(method, path, body = null) {
       url: path,
       headers,
       requestBody: body,
-      responseStatus: `${res.status} ${res.statusText || (res.ok ? 'OK' : 'Error')}`,
+      responseStatus: `${res.status} ${res.statusText || (res.ok ? "OK" : "Error")}`,
       responseBody: data,
       latency,
     };
@@ -139,9 +141,9 @@ async function callApi(method, path, body = null) {
       url: path,
       headers,
       requestBody: body,
-      responseStatus: 'Request Dispatched',
+      responseStatus: "Request Dispatched",
       responseBody: {
-        note: 'So\'rov Zim-Zim API serveriga yuborildi.',
+        note: "So'rov Zim-Zim API serveriga yuborildi.",
         endpoint: fullUrl,
         headersSent: headers,
         payloadSent: body,
@@ -161,44 +163,57 @@ function updateConsoleView() {
   consoleStatus.textContent = lastInspectorData.responseStatus;
   consoleLatency.textContent = `Latency: ${lastInspectorData.latency}ms`;
 
-  const isOk = lastInspectorData.responseStatus.startsWith('2');
+  const isOk = lastInspectorData.responseStatus.startsWith("2");
   consoleStatus.className = `font-bold px-2 py-0.5 rounded-full shrink-0 text-xs ${
-    isOk ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+    isOk ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
   }`;
 
-  if (activeConsoleTab === 'response') {
-    consoleOutput.textContent = JSON.stringify(lastInspectorData.responseBody, null, 2);
-    consoleOutput.className = isOk ? 'text-emerald-400 whitespace-pre-wrap break-all' : 'text-zinc-300 whitespace-pre-wrap break-all';
-  } else if (activeConsoleTab === 'request') {
+  if (activeConsoleTab === "response") {
+    consoleOutput.textContent = JSON.stringify(
+      lastInspectorData.responseBody,
+      null,
+      2,
+    );
+    consoleOutput.className = isOk
+      ? "text-emerald-400 whitespace-pre-wrap break-all"
+      : "text-zinc-300 whitespace-pre-wrap break-all";
+  } else if (activeConsoleTab === "request") {
     consoleOutput.textContent = lastInspectorData.requestBody
       ? JSON.stringify(lastInspectorData.requestBody, null, 2)
-      : '// Ushbu so\'rovda tana (request body) mavjud emas';
-    consoleOutput.className = 'text-blue-400 whitespace-pre-wrap break-all';
-  } else if (activeConsoleTab === 'headers') {
-    consoleOutput.textContent = JSON.stringify(lastInspectorData.headers, null, 2);
-    consoleOutput.className = 'text-amber-400 whitespace-pre-wrap break-all';
+      : "// Ushbu so'rovda tana (request body) mavjud emas";
+    consoleOutput.className = "text-blue-400 whitespace-pre-wrap break-all";
+  } else if (activeConsoleTab === "headers") {
+    consoleOutput.textContent = JSON.stringify(
+      lastInspectorData.headers,
+      null,
+      2,
+    );
+    consoleOutput.className = "text-amber-400 whitespace-pre-wrap break-all";
   }
 }
 
 function setConsoleTab(tab) {
   activeConsoleTab = tab;
   [showResponseTab, showRequestTab, showHeadersTab].forEach((btn) => {
-    btn.className = 'px-4 py-2 text-zinc-400 hover:text-white';
+    btn.className = "px-4 py-2 text-zinc-400 hover:text-white";
   });
 
-  if (tab === 'response') {
-    showResponseTab.className = 'px-4 py-2 text-white font-bold border-b-2 border-red-500';
-  } else if (tab === 'request') {
-    showRequestTab.className = 'px-4 py-2 text-white font-bold border-b-2 border-red-500';
-  } else if (tab === 'headers') {
-    showHeadersTab.className = 'px-4 py-2 text-white font-bold border-b-2 border-red-500';
+  if (tab === "response") {
+    showResponseTab.className =
+      "px-4 py-2 text-white font-bold border-b-2 border-red-500";
+  } else if (tab === "request") {
+    showRequestTab.className =
+      "px-4 py-2 text-white font-bold border-b-2 border-red-500";
+  } else if (tab === "headers") {
+    showHeadersTab.className =
+      "px-4 py-2 text-white font-bold border-b-2 border-red-500";
   }
   updateConsoleView();
 }
 
-showResponseTab.onclick = () => setConsoleTab('response');
-showRequestTab.onclick = () => setConsoleTab('request');
-showHeadersTab.onclick = () => setConsoleTab('headers');
+showResponseTab.onclick = () => setConsoleTab("response");
+showRequestTab.onclick = () => setConsoleTab("request");
+showHeadersTab.onclick = () => setConsoleTab("headers");
 
 // ── Copy cURL ──
 copyCurlBtn.onclick = async () => {
@@ -251,19 +266,49 @@ async function loadProducts() {
     </div>
   `;
 
-  const res = await callApi('GET', '/products?limit=8&offset=0');
+  const res = await callApi("GET", "/products?limit=8&offset=0");
 
   if (res.ok && res.data?.data && res.data.data.length > 0) {
     currentProducts = res.data.data;
   } else {
     // Demo taomlar (agar API token hali kiritilmagan bo'lsa interfeys bo'sh qolmasligi uchun)
     currentProducts = [
-      { product_id: 136001, name: "Zim-Zim Qiyma Shashlik", price: 28000, enable: true },
-      { product_id: 136002, name: "Jaz Mol Go'shti Shashlik", price: 34000, enable: true },
-      { product_id: 136003, name: "Zim-Zim Maxsus To'y Palovi", price: 45000, enable: true },
-      { product_id: 136004, name: "Tandir Somsa (Go'shtli)", price: 14000, enable: true },
-      { product_id: 136005, name: "Achichiq-chuchuk Salati", price: 12000, enable: true },
-      { product_id: 136006, name: "Ko'k Choy (Choynakda)", price: 6000, enable: true },
+      {
+        product_id: 136001,
+        name: "Zim-Zim Qiyma Shashlik",
+        price: 28000,
+        enable: true,
+      },
+      {
+        product_id: 136002,
+        name: "Jaz Mol Go'shti Shashlik",
+        price: 34000,
+        enable: true,
+      },
+      {
+        product_id: 136003,
+        name: "Zim-Zim Maxsus To'y Palovi",
+        price: 45000,
+        enable: true,
+      },
+      {
+        product_id: 136004,
+        name: "Tandir Somsa (Go'shtli)",
+        price: 14000,
+        enable: true,
+      },
+      {
+        product_id: 136005,
+        name: "Achichiq-chuchuk Salati",
+        price: 12000,
+        enable: true,
+      },
+      {
+        product_id: 136006,
+        name: "Ko'k Choy (Choynakda)",
+        price: 6000,
+        enable: true,
+      },
     ];
   }
 
@@ -272,16 +317,17 @@ async function loadProducts() {
 }
 
 function renderProductsGrid() {
-  productsGrid.innerHTML = '';
+  productsGrid.innerHTML = "";
   currentProducts.forEach((p) => {
-    const card = document.createElement('div');
-    card.className = 'p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 flex flex-col justify-between gap-3 hover:border-zinc-700 transition-all shadow-sm';
+    const card = document.createElement("div");
+    card.className =
+      "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 flex flex-col justify-between gap-3 hover:border-zinc-700 transition-all shadow-sm";
     card.innerHTML = `
       <div class="space-y-1.5">
         <div class="flex items-center justify-between">
           <span class="text-[10px] font-mono font-bold text-zinc-500">ID: #${p.product_id}</span>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${p.enable ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
-            ${p.enable ? 'Sotuvda bor' : 'Tugagan'}
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${p.enable ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}">
+            ${p.enable ? "Sotuvda bor" : "Tugagan"}
           </span>
         </div>
         <h3 class="text-sm font-bold text-white">${p.name}</h3>
@@ -313,12 +359,12 @@ submitAddDishBtn.onclick = async () => {
   const desc = newDishDesc.value.trim();
 
   if (!name || isNaN(price)) {
-    alert('Iltimos, taom nomi va narxini to\'g\'ri kiriting!');
+    alert("Iltimos, taom nomi va narxini to'g'ri kiriting!");
     return;
   }
 
   submitAddDishBtn.disabled = true;
-  submitAddDishBtn.textContent = 'Yuborilmoqda...';
+  submitAddDishBtn.textContent = "Yuborilmoqda...";
 
   const payload = {
     payload: [
@@ -331,13 +377,15 @@ submitAddDishBtn.onclick = async () => {
     ],
   };
 
-  const res = await callApi('PUT', '/products', payload);
+  const res = await callApi("PUT", "/products", payload);
   submitAddDishBtn.disabled = false;
-  submitAddDishBtn.textContent = 'Saqlash va Yuborish';
-  addDishModal.classList.add('hidden');
-  addDishModal.classList.remove('flex');
+  submitAddDishBtn.textContent = "Saqlash va Yuborish";
+  addDishModal.classList.add("hidden");
+  addDishModal.classList.remove("flex");
 
-  const newId = res.data?.data?.[0]?.product_id || Math.floor(100000 + Math.random() * 90000);
+  const newId =
+    res.data?.data?.[0]?.product_id ||
+    Math.floor(100000 + Math.random() * 90000);
   currentProducts.unshift({ product_id: newId, name, price, enable: true });
   productCountBadge.textContent = `${currentProducts.length} taom`;
   renderProductsGrid();
@@ -345,7 +393,10 @@ submitAddDishBtn.onclick = async () => {
 
 // ── UPDATE DISH PRICE (PUT /products) ──
 window.editPricePrompt = async (productId, oldPrice) => {
-  const newPriceStr = prompt(`Yangi narxni kiriting (hozirgi: ${oldPrice} UZS):`, oldPrice);
+  const newPriceStr = prompt(
+    `Yangi narxni kiriting (hozirgi: ${oldPrice} UZS):`,
+    oldPrice,
+  );
   if (!newPriceStr || isNaN(Number(newPriceStr))) return;
 
   const newPrice = Number(newPriceStr);
@@ -359,7 +410,7 @@ window.editPricePrompt = async (productId, oldPrice) => {
     ],
   };
 
-  await callApi('PUT', '/products', payload);
+  await callApi("PUT", "/products", payload);
   const found = currentProducts.find((p) => p.product_id === productId);
   if (found) {
     found.price = newPrice;
@@ -369,9 +420,12 @@ window.editPricePrompt = async (productId, oldPrice) => {
 
 // ── DELETE DISH (DELETE /products/{id}) ──
 window.deleteProduct = async (productId) => {
-  if (!confirm(`Haqiqatan ham #${productId} taomni menyudan o'chirmoqchimisiz?`)) return;
+  if (
+    !confirm(`Haqiqatan ham #${productId} taomni menyudan o'chirmoqchimisiz?`)
+  )
+    return;
 
-  await callApi('DELETE', `/products/${productId}`);
+  await callApi("DELETE", `/products/${productId}`);
   currentProducts = currentProducts.filter((p) => p.product_id !== productId);
   productCountBadge.textContent = `${currentProducts.length} taom`;
   renderProductsGrid();
@@ -384,22 +438,22 @@ window.addToCart = (productId) => {
 
   currentCart.push(product);
   updateCartView();
-  showTab('orders');
+  showTab("orders");
 };
 
 function updateCartView() {
   if (currentCart.length === 0) {
     orderItemsList.innerHTML = `<div class="py-4 text-center text-zinc-500 text-xs">Savat bo'sh. Menyu bo'limidan taom qo'shing.</div>`;
-    orderTotalAmount.textContent = '0 UZS';
+    orderTotalAmount.textContent = "0 UZS";
     return;
   }
 
-  orderItemsList.innerHTML = '';
+  orderItemsList.innerHTML = "";
   let total = 0;
   currentCart.forEach((item, index) => {
     total += item.price;
-    const row = document.createElement('div');
-    row.className = 'py-2 flex justify-between items-center text-zinc-300';
+    const row = document.createElement("div");
+    row.className = "py-2 flex justify-between items-center text-zinc-300";
     row.innerHTML = `
       <span class="font-medium">${item.name}</span>
       <div class="flex items-center gap-2">
@@ -423,13 +477,13 @@ window.removeFromCart = (index) => {
 
 createOrderBtn.onclick = async () => {
   if (currentCart.length === 0) {
-    alert('Buyurtma berish uchun avval biror taomni savatga qo\'shing!');
+    alert("Buyurtma berish uchun avval biror taomni savatga qo'shing!");
     return;
   }
 
-  const placeId = Number(document.getElementById('orderPlaceSelect').value);
-  const tableId = Number(document.getElementById('orderTableInput').value);
-  const guests = Number(document.getElementById('orderGuestsInput').value);
+  const placeId = Number(document.getElementById("orderPlaceSelect").value);
+  const tableId = Number(document.getElementById("orderTableInput").value);
+  const guests = Number(document.getElementById("orderGuestsInput").value);
 
   const orderPayload = {
     place_id: placeId,
@@ -443,25 +497,29 @@ createOrderBtn.onclick = async () => {
   };
 
   createOrderBtn.disabled = true;
-  createOrderBtn.textContent = 'Yuborilmoqda...';
+  createOrderBtn.textContent = "Yuborilmoqda...";
 
-  const res = await callApi('POST', '/orders', orderPayload);
+  const res = await callApi("POST", "/orders", orderPayload);
   createOrderBtn.disabled = false;
-  createOrderBtn.textContent = 'Buyurtmani yuborish (POST /orders)';
+  createOrderBtn.textContent = "Buyurtmani yuborish (POST /orders)";
 
-  const orderId = res.data?.data?.order_id || res.data?.data?.id || Math.floor(1000 + Math.random() * 9000);
+  const orderId =
+    res.data?.data?.order_id ||
+    res.data?.data?.id ||
+    Math.floor(1000 + Math.random() * 9000);
   currentActiveOrderId = orderId;
   activeOrderId.textContent = `#${orderId}`;
-  activeOrderBox.classList.remove('hidden');
+  activeOrderBox.classList.remove("hidden");
 };
 
 // ── CLOSE ORDER (POST /orders/{id}/close) ──
 closeOrderBtn.onclick = async () => {
   if (!currentActiveOrderId) return;
 
-  const paymentTypeId = Number(document.getElementById('paymentTypeSelect').value) || 1;
+  const paymentTypeId =
+    Number(document.getElementById("paymentTypeSelect").value) || 1;
   closeOrderBtn.disabled = true;
-  closeOrderBtn.textContent = 'To\'lov yopilmoqda...';
+  closeOrderBtn.textContent = "To'lov yopilmoqda...";
 
   const total = currentCart.reduce((sum, item) => sum + item.price, 0) || 48000;
   const payload = {
@@ -469,53 +527,61 @@ closeOrderBtn.onclick = async () => {
     amount: total,
   };
 
-  await callApi('POST', `/orders/${currentActiveOrderId}/close`, payload);
+  await callApi("POST", `/orders/${currentActiveOrderId}/close`, payload);
   closeOrderBtn.disabled = false;
-  closeOrderBtn.textContent = 'To\'lov bilan yopish (POST /orders/{id}/close)';
+  closeOrderBtn.textContent = "To'lov bilan yopish (POST /orders/{id}/close)";
 
-  alert(`🎉 Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi! Kassa kvitansiyasi shakllandi.`);
+  alert(
+    `🎉 Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi! Kassa kvitansiyasi shakllandi.`,
+  );
   currentCart = [];
   updateCartView();
-  activeOrderBox.classList.add('hidden');
+  activeOrderBox.classList.add("hidden");
   currentActiveOrderId = null;
 };
 
 // ── DICTIONARIES ──
 window.fetchDictionary = async (dictType) => {
-  await callApi('GET', `/${dictType}`);
+  await callApi("GET", `/${dictType}`);
 };
 
 // ── TAB SWITCHING ──
 function showTab(tabName) {
-  [tabProducts, tabOrders, tabDicts].forEach((el) => el.classList.add('hidden'));
+  [tabProducts, tabOrders, tabDicts].forEach((el) =>
+    el.classList.add("hidden"),
+  );
   [tabProductsBtn, tabOrdersBtn, tabDictsBtn].forEach((btn) => {
-    btn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-400 hover:text-white flex items-center justify-center gap-2';
+    btn.className =
+      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-400 hover:text-white flex items-center justify-center gap-2";
   });
 
-  if (tabName === 'products') {
-    tabProducts.classList.remove('hidden');
-    tabProductsBtn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2';
-  } else if (tabName === 'orders') {
-    tabOrders.classList.remove('hidden');
-    tabOrdersBtn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2';
-  } else if (tabName === 'dicts') {
-    tabDicts.classList.remove('hidden');
-    tabDictsBtn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2';
+  if (tabName === "products") {
+    tabProducts.classList.remove("hidden");
+    tabProductsBtn.className =
+      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+  } else if (tabName === "orders") {
+    tabOrders.classList.remove("hidden");
+    tabOrdersBtn.className =
+      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+  } else if (tabName === "dicts") {
+    tabDicts.classList.remove("hidden");
+    tabDictsBtn.className =
+      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
   }
 }
 
-tabProductsBtn.onclick = () => showTab('products');
-tabOrdersBtn.onclick = () => showTab('orders');
-tabDictsBtn.onclick = () => showTab('dicts');
+tabProductsBtn.onclick = () => showTab("products");
+tabOrdersBtn.onclick = () => showTab("orders");
+tabDictsBtn.onclick = () => showTab("dicts");
 
 // ── MODAL ──
 openAddDishModalBtn.onclick = () => {
-  addDishModal.classList.remove('hidden');
-  addDishModal.classList.add('flex');
+  addDishModal.classList.remove("hidden");
+  addDishModal.classList.add("flex");
 };
 closeAddDishModalBtn.onclick = cancelAddDishBtn.onclick = () => {
-  addDishModal.classList.add('hidden');
-  addDishModal.classList.remove('flex');
+  addDishModal.classList.add("hidden");
+  addDishModal.classList.remove("flex");
 };
 
 // ── API KEY CONFIG ──
@@ -526,24 +592,28 @@ updateTokenBanner();
 
 saveKeyBtn.onclick = () => {
   currentApiKey = apiKeyInput.value.trim();
-  localStorage.setItem('zimzim_api_key', currentApiKey);
+  localStorage.setItem("zimzim_api_key", currentApiKey);
   updateTokenBanner();
-  saveKeyBtn.textContent = 'Saqlandi!';
-  saveKeyBtn.className = 'px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold transition-all shrink-0';
+  saveKeyBtn.textContent = "Saqlandi!";
+  saveKeyBtn.className =
+    "px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold transition-all shrink-0";
   setTimeout(() => {
-    saveKeyBtn.textContent = 'Saqlash';
-    saveKeyBtn.className = 'px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-all shrink-0';
+    saveKeyBtn.textContent = "Saqlash";
+    saveKeyBtn.className =
+      "px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-all shrink-0";
   }, 1500);
   loadProducts();
 };
 
 toggleKeyVisibility.onclick = () => {
-  if (apiKeyInput.type === 'password') {
-    apiKeyInput.type = 'text';
-    toggleKeyVisibility.innerHTML = '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>';
+  if (apiKeyInput.type === "password") {
+    apiKeyInput.type = "text";
+    toggleKeyVisibility.innerHTML =
+      '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>';
   } else {
-    apiKeyInput.type = 'password';
-    toggleKeyVisibility.innerHTML = '<i data-lucide="eye" class="w-3.5 h-3.5"></i>';
+    apiKeyInput.type = "password";
+    toggleKeyVisibility.innerHTML =
+      '<i data-lucide="eye" class="w-3.5 h-3.5"></i>';
   }
   refreshIcons();
 };
