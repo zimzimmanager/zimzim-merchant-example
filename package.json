@@ -1,0 +1,19 @@
+{
+  "name": "zimzim-merchant-example",
+  "version": "1.0.0",
+  "description": "Zim-Zim Merchant API Interactive Demo & CRUD Example Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "zim-zim",
+    "merchant-api",
+    "foodtech",
+    "pos",
+    "crud-example"
+  ],
+  "author": "Zim-Zim Engineering",
+  "license": "MIT"
+}
