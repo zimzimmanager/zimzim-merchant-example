@@ -1,21 +1,18 @@
 // ============================================================================
-// Zim-Zim Merchant API — Pure Frontend JavaScript Application (No Backend)
-// Zim-Zim Merchant API — Interactive Web App & CRUD Playground (Pure Frontend)
+// Zim-Zim Merchant API — Oddiy, Tushunarli va Interaktiv Boshqaruv Skripti
 // ============================================================================
 
 const API_BASE_URL = "https://api-kafe.zim-zim.uz/api/v1/merchant";
 const DEFAULT_API_KEY = "demo_zimzim_sandbox_2026";
 
-let currentApiKey = localStorage.getItem("zimzim_api_key") || "";
-let currentProducts = [];
-// Load from localStorage or set default token automatically
+// LocalStorage orqali tokenni tekshirish yoki avtomatik standart token o'rnatish
 let currentApiKey = localStorage.getItem("zimzim_api_key");
 if (!currentApiKey) {
   currentApiKey = DEFAULT_API_KEY;
   localStorage.setItem("zimzim_api_key", currentApiKey);
 }
 
-// Initial demo products
+// Boshlang'ich demo taomlar ro'yxati (oddiy va tushunarli)
 const INITIAL_PRODUCTS = [
   {
     product_id: 136001,
@@ -65,24 +62,25 @@ let currentProducts = [...INITIAL_PRODUCTS];
 let currentCart = [];
 let currentActiveOrderId = null;
 
-// Console state
+// Jonli konsol holati
 let lastInspectorData = {
   method: "GET",
   url: "/products?limit=8",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    "X-Api-Key": currentApiKey || "<YOUR_TOKEN>",
     "X-Api-Key": currentApiKey,
   },
   requestBody: null,
   responseStatus: "200 OK",
-  responseBody: {},
-  latency: 35,
+  responseBody: {
+    message: "Tizim tayyor. Chap tarafdagi biror tugmani bosib sinab ko'ring!",
+  },
+  latency: 24,
 };
 let activeConsoleTab = "response";
 
-// DOM Elements
+// DOM Elementlari
 const apiKeyInput = document.getElementById("apiKeyInput");
 const saveKeyBtn = document.getElementById("saveKeyBtn");
 const resetDemoKeyBtn = document.getElementById("resetDemoKeyBtn");
@@ -92,8 +90,9 @@ const tokenStatusText = document.getElementById("tokenStatusText");
 const productCountBadge = document.getElementById("productCountBadge");
 const productsGrid = document.getElementById("productsGrid");
 const refreshProductsBtn = document.getElementById("refreshProductsBtn");
+const toastContainer = document.getElementById("toastContainer");
 
-// Console DOM
+// Konsol DOM
 const consoleMethod = document.getElementById("consoleMethod");
 const consoleUrl = document.getElementById("consoleUrl");
 const consoleStatus = document.getElementById("consoleStatus");
@@ -105,7 +104,7 @@ const showResponseTab = document.getElementById("showResponseTab");
 const showRequestTab = document.getElementById("showRequestTab");
 const showHeadersTab = document.getElementById("showHeadersTab");
 
-// Tabs DOM
+// Tablar DOM
 const tabProductsBtn = document.getElementById("tabProductsBtn");
 const tabOrdersBtn = document.getElementById("tabOrdersBtn");
 const tabDictsBtn = document.getElementById("tabDictsBtn");
@@ -113,7 +112,7 @@ const tabProducts = document.getElementById("tabProducts");
 const tabOrders = document.getElementById("tabOrders");
 const tabDicts = document.getElementById("tabDicts");
 
-// Dictionaries DOM
+// Ma'lumotnomalar DOM
 const dictDisplayBox = document.getElementById("dictDisplayBox");
 const dictTitle = document.getElementById("dictTitle");
 const dictCount = document.getElementById("dictCount");
@@ -127,9 +126,10 @@ const cancelAddDishBtn = document.getElementById("cancelAddDishBtn");
 const submitAddDishBtn = document.getElementById("submitAddDishBtn");
 const newDishName = document.getElementById("newDishName");
 const newDishPrice = document.getElementById("newDishPrice");
+const newDishCategory = document.getElementById("newDishCategory");
 const newDishDesc = document.getElementById("newDishDesc");
 
-// Orders DOM
+// Kassa va Buyurtmalar DOM
 const createOrderBtn = document.getElementById("createOrderBtn");
 const closeOrderBtn = document.getElementById("closeOrderBtn");
 const activeOrderBox = document.getElementById("activeOrderBox");
@@ -143,31 +143,52 @@ function refreshIcons() {
   }
 }
 
-// ── Update Token Status Bar UI ──
+// ── Xabarnomalar (Toasts) Chiqarish ──
+function showToast(message, type = "success") {
+  if (!toastContainer) return;
+  const toast = document.createElement("div");
+  const isSuccess = type === "success";
+
+  toast.className = `p-3.5 rounded-2xl border shadow-2xl flex items-start gap-2.5 text-xs font-medium animate-fade-in transition-all ${
+    isSuccess
+      ? "bg-zinc-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-950/40"
+      : "bg-zinc-900/95 border-red-500/40 text-red-300 shadow-red-950/40"
+  }`;
+
+  toast.innerHTML = `
+    <span class="text-base shrink-0">${isSuccess ? "✅" : "⚠️"}</span>
+    <div class="flex-1 leading-snug">${message}</div>
+  `;
+
+  toastContainer.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// ── Token Statusini Yangilash ──
 function updateTokenBanner() {
-  if (currentApiKey) {
   const isDemo =
     currentApiKey === DEFAULT_API_KEY || currentApiKey.startsWith("demo_");
 
   if (isDemo) {
     tokenStatusBar.className =
       "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `🟢 <b>API Token ulangan:</b> <span class="font-mono">${currentApiKey.slice(0, 10)}••••••••</span>. So'rovlar to'g'ridan-to'g'ri Zim-Zim API ga yo'naltirilmoqda.`;
-    tokenStatusText.innerHTML = `🟢 <b>Demo Token faol:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">${currentApiKey}</span> — Barcha CRUD & POS amallari to'liq ishchi holatda!`;
+    tokenStatusText.innerHTML = `🟢 <b>Demo Token faol:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey}</span> — Barcha tugmalarni bemalol bosib sinab ko'rishingiz mumkin!`;
   } else if (currentApiKey) {
     tokenStatusBar.className =
       "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `🟢 <b>Maxfiy Token ulangan:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">${currentApiKey.slice(0, 10)}••••••••</span> — Zim-Zim serveriga to'g'ridan-to'g'ri ulangan.`;
+    tokenStatusText.innerHTML = `🟢 <b>Maxfiy Token ulangan:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey.slice(0, 10)}••••••••</span> — Zim-Zim serveriga to'g'ridan-to'g'ri so'rovlar yuborilmoqda.`;
   } else {
     tokenStatusBar.className =
       "bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting va "Saqlash" tugmasini bosing.`;
     tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting yoki "Demo token" tugmasini bosing.`;
   }
 }
 
-// ── Direct Browser Fetch to Zim-Zim API (Pure Frontend) ──
-// ── API Call Function (Supports Real Server & Seamless Sandbox Simulation) ──
+// ── API So'rov Funktsiyasi (Haqiqiy server + Avtomatik Sandbox Simulyatsiyasi) ──
 async function callApi(method, path, body = null) {
   const startTime = Date.now();
   const fullUrl = `${API_BASE_URL}${path}`;
@@ -181,7 +202,7 @@ async function callApi(method, path, body = null) {
     headers["X-Api-Key"] = currentApiKey;
   }
 
-  // 1. Try real server request first
+  // 1. Haqiqiy serverga so'rov jo'natishga urinish
   let resOk = false;
   let resStatus = 200;
   let resStatusText = "OK";
@@ -195,15 +216,11 @@ async function callApi(method, path, body = null) {
       mode: "cors",
     });
 
-    const latency = Date.now() - startTime;
-    let data;
     resStatus = res.status;
     resStatusText = res.statusText || (res.ok ? "OK" : "Error");
     try {
-      data = await res.json();
       realData = await res.json();
     } catch {
-      data = { status: res.status, statusText: res.statusText };
       realData = null;
     }
     resOk = res.ok;
@@ -211,17 +228,15 @@ async function callApi(method, path, body = null) {
     resOk = false;
   }
 
-  const latency = Math.max(16, Date.now() - startTime);
+  const latency = Math.max(18, Date.now() - startTime);
 
-  // 2. If real server returns SUCCESS (valid organization token), use it
+  // 2. Agar haqiqiy server 200/201 muvaffaqiyat qaytarsa — o'shani ko'rsatamiz
   if (resOk && realData) {
     lastInspectorData = {
       method,
       url: path,
       headers,
       requestBody: body,
-      responseStatus: `${res.status} ${res.statusText || (res.ok ? "OK" : "Error")}`,
-      responseBody: data,
       responseStatus: `${resStatus} ${resStatusText}`,
       responseBody: realData,
       latency,
@@ -230,23 +245,8 @@ async function callApi(method, path, body = null) {
     return { ok: true, status: resStatus, data: realData };
   }
 
-    updateConsoleView();
-    return { ok: res.ok, status: res.status, data };
-  } catch (err) {
-    const latency = Date.now() - startTime;
-    lastInspectorData = {
-      method,
-      url: path,
-      headers,
-      requestBody: body,
-      responseStatus: "Request Dispatched",
-      responseBody: {
-        note: "So'rov Zim-Zim API serveriga yuborildi.",
-        endpoint: fullUrl,
-        headersSent: headers,
-        payloadSent: body,
-        details: err.message,
-  // 3. Simulated Authentic Zim-Zim Response (for Demo token & Out-of-the-box Testing)
+  // 3. Demo / Sandbox rejimi: Foydalanuvchi "prosta tak" barcha jarayonlarni ko'rishi uchun
+  // API spetsifikatsiyasiga to'liq mos formatdagi jonli javob shakllantiriladi:
   let simulatedData = null;
   let simulatedStatus = "200 OK";
 
@@ -336,10 +336,7 @@ async function callApi(method, path, body = null) {
           { id: 3, name: "Click / Payme (Online)", is_active: true },
         ],
       },
-      latency,
     };
-    updateConsoleView();
-    return { ok: false, error: err };
   } else if (path === "/places") {
     simulatedData = {
       auth: { status: "SUCCESS" },
@@ -398,11 +395,10 @@ async function callApi(method, path, body = null) {
   return { ok: true, status: 200, data: simulatedData };
 }
 
-// ── Update Console View ──
+// ── Jonli Konsolni Yangilash ──
 function updateConsoleView() {
   consoleMethod.textContent = lastInspectorData.method;
 
-  // Set method badge color
   const m = lastInspectorData.method;
   if (m === "GET") {
     consoleMethod.className =
@@ -420,9 +416,8 @@ function updateConsoleView() {
 
   consoleUrl.textContent = `${API_BASE_URL}${lastInspectorData.url}`;
   consoleStatus.textContent = lastInspectorData.responseStatus;
-  consoleLatency.textContent = `Latency: ${lastInspectorData.latency}ms`;
+  consoleLatency.textContent = `Kechikish: ${lastInspectorData.latency}ms`;
 
-  const isOk = lastInspectorData.responseStatus.startsWith("2");
   const isOk =
     lastInspectorData.responseStatus.startsWith("2") ||
     lastInspectorData.responseStatus.includes("OK");
@@ -477,7 +472,7 @@ showResponseTab.onclick = () => setConsoleTab("response");
 showRequestTab.onclick = () => setConsoleTab("request");
 showHeadersTab.onclick = () => setConsoleTab("headers");
 
-// ── Copy cURL ──
+// ── Kodni Nusxalash (cURL & Fetch) ──
 copyCurlBtn.onclick = async () => {
   const { method, url, headers, requestBody } = lastInspectorData;
   let curl = `curl -X ${method} "${API_BASE_URL}${url}" \\\n`;
@@ -497,7 +492,6 @@ copyCurlBtn.onclick = async () => {
   }, 2000);
 };
 
-// ── Copy Fetch ──
 if (copyFetchBtn) {
   copyFetchBtn.onclick = async () => {
     const { method, url, headers, requestBody } = lastInspectorData;
@@ -519,62 +513,21 @@ if (copyFetchBtn) {
   };
 }
 
-// ── Fetch & Render Products (GET /products) ──
+// ── Taomlar Ro'yxatini Chizish (Render Products) ──
 async function loadProducts() {
   productsGrid.innerHTML = `
     <div class="col-span-2 py-12 text-center text-zinc-500 text-xs flex flex-col items-center gap-2">
       <div class="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-      <span>Mahsulotlar Zim-Zim serveridan yuklanmoqda...</span>
+      <span>Taomlar yuklanmoqda...</span>
     </div>
   `;
 
   const res = await callApi("GET", "/products?limit=8&offset=0");
 
-  if (res.ok && res.data?.data && res.data.data.length > 0) {
   if (res.ok && res.data?.payload?.data) {
     currentProducts = res.data.payload.data;
   } else if (res.ok && res.data?.data) {
     currentProducts = res.data.data;
-  } else {
-    // Demo taomlar (agar API token hali kiritilmagan bo'lsa interfeys bo'sh qolmasligi uchun)
-    currentProducts = [
-      {
-        product_id: 136001,
-        name: "Zim-Zim Qiyma Shashlik",
-        price: 28000,
-        enable: true,
-      },
-      {
-        product_id: 136002,
-        name: "Jaz Mol Go'shti Shashlik",
-        price: 34000,
-        enable: true,
-      },
-      {
-        product_id: 136003,
-        name: "Zim-Zim Maxsus To'y Palovi",
-        price: 45000,
-        enable: true,
-      },
-      {
-        product_id: 136004,
-        name: "Tandir Somsa (Go'shtli)",
-        price: 14000,
-        enable: true,
-      },
-      {
-        product_id: 136005,
-        name: "Achichiq-chuchuk Salati",
-        price: 12000,
-        enable: true,
-      },
-      {
-        product_id: 136006,
-        name: "Ko'k Choy (Choynakda)",
-        price: 6000,
-        enable: true,
-      },
-    ];
   }
 
   productCountBadge.textContent = `${currentProducts.length} taom`;
@@ -586,35 +539,40 @@ function renderProductsGrid() {
   currentProducts.forEach((p) => {
     const card = document.createElement("div");
     card.className =
-      "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 flex flex-col justify-between gap-3 hover:border-zinc-700 transition-all shadow-sm";
+      "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/80 hover:border-zinc-700 flex flex-col justify-between gap-3.5 transition-all shadow-md group";
     card.innerHTML = `
-      <div class="space-y-1.5">
+      <div class="space-y-2">
         <div class="flex items-center justify-between">
-          <span class="text-[10px] font-mono font-bold text-zinc-500">ID: #${p.product_id}</span>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${p.enable ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}">
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${
+          <span class="text-[10px] font-mono font-bold text-zinc-500 bg-zinc-950 px-2 py-0.5 rounded-md border border-zinc-800">ID: #${p.product_id}</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold ${
             p.enable
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
               : "bg-red-500/10 text-red-400 border border-red-500/20"
           }">
-            ${p.enable ? "Sotuvda bor" : "Tugagan"}
+            ${p.enable ? "🟢 Sotuvda bor" : "🔴 Tugagan"}
           </span>
         </div>
-        <h3 class="text-sm font-bold text-white">${p.name}</h3>
-        <p class="text-xs font-mono text-red-500 dark:text-red-400 font-bold">${Number(p.price).toLocaleString()} UZS</p>
-        <p class="text-xs font-mono text-red-400 font-bold">${Number(p.price).toLocaleString()} UZS</p>
+        
+        <div>
+          <h4 class="text-sm font-bold text-white group-hover:text-red-400 transition-colors">${p.name}</h4>
+          ${p.category ? `<span class="text-[10px] text-zinc-400 font-medium">${p.category}</span>` : ""}
+        </div>
+
+        <p class="text-sm font-mono text-red-400 font-extrabold tracking-tight">${Number(p.price).toLocaleString()} UZS</p>
       </div>
 
-      <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800">
-        <button onclick="addToCart(${p.product_id})" class="flex-1 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center justify-center gap-1 transition-colors">
+      <!-- Tushunarli Matnli Tugmalar -->
+      <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800/80">
+        <button onclick="addToCart(${p.product_id})" class="flex-1 py-2 px-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-red-600/20" title="Ushbu taomni buyurtma savatiga qo'shish">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-          <span>Savatga</span>
+          <span>+ Savatga</span>
         </button>
-        <button onclick="editPricePrompt(${p.product_id}, ${p.price})" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs" title="Narxini yangilash (PUT)">
-          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+        <button onclick="editPricePrompt(${p.product_id}, ${p.price})" class="py-2 px-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-semibold flex items-center gap-1 transition-all" title="Taom narxini o'zgartirish (PUT /products)">
+          <i data-lucide="edit-3" class="w-3 h-3 text-blue-400"></i>
+          <span>Narx</span>
         </button>
-        <button onclick="deleteProduct(${p.product_id})" class="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs" title="O'chirish (DELETE)">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        <button onclick="deleteProduct(${p.product_id})" class="py-2 px-2.5 rounded-xl bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-400 text-xs font-semibold flex items-center gap-1 transition-all" title="Taomni o'chirish (DELETE /products/{id})">
+          <i data-lucide="trash-2" class="w-3 h-3"></i>
         </button>
       </div>
     `;
@@ -623,10 +581,115 @@ function renderProductsGrid() {
   refreshIcons();
 }
 
-// ── CREATE / UPSERT DISH (PUT /products) ──
+// ── 1-BOSISHDA TEZKOR SINOV SSENARIYLARI (QUICK TEST) ──
+window.quickTest = async (action) => {
+  if (action === "create") {
+    const randomDishNames = [
+      "Zim-Zim Maxsus Qozon Kabob",
+      "Toshkent To'y Oshi (Maxsus)",
+      "Qo'y Go'shtli Tandir Somsa",
+      "Jaz Shashlik (Premium)",
+    ];
+    const name =
+      randomDishNames[Math.floor(Math.random() * randomDishNames.length)];
+    const price = Math.floor(25 + Math.random() * 40) * 1000;
+
+    const payload = {
+      payload: [
+        {
+          name,
+          price,
+          enable: true,
+          description: "Avtomatik tezkor sinov taomi",
+        },
+      ],
+    };
+
+    const res = await callApi("PUT", "/products", payload);
+    const newId =
+      res.data?.payload?.data?.[0]?.product_id ||
+      res.data?.data?.[0]?.product_id ||
+      Math.floor(136000 + Math.random() * 9000);
+
+    currentProducts.unshift({
+      product_id: newId,
+      name,
+      price,
+      enable: true,
+      category: "Tezkor sinov",
+    });
+    productCountBadge.textContent = `${currentProducts.length} taom`;
+    renderProductsGrid();
+    showTab("products");
+    showToast(
+      `🎉 <b>Yangi taom qo'shildi:</b> "${name}" (${price.toLocaleString()} UZS). Konsolda PUT javobi ko'rinmoqda!`,
+    );
+  } else if (action === "update") {
+    if (currentProducts.length === 0) return;
+    const dish = currentProducts[0];
+    const newPrice = dish.price + 5000;
+
+    const payload = {
+      payload: [
+        {
+          product_id: dish.product_id,
+          price: newPrice,
+          enable: true,
+        },
+      ],
+    };
+
+    await callApi("PUT", "/products", payload);
+    dish.price = newPrice;
+    renderProductsGrid();
+    showTab("products");
+    showToast(
+      `✏️ <b>Narx yangilandi:</b> "${dish.name}" narxi ${newPrice.toLocaleString()} UZS ga o'zgardi!`,
+    );
+  } else if (action === "order") {
+    // 1-va 2-taomlarni savatga solish
+    currentCart = [
+      { ...currentProducts[0] },
+      { ...(currentProducts[1] || currentProducts[0]) },
+    ];
+    updateCartView();
+    showTab("orders");
+
+    // Buyurtma yaratish
+    const orderPayload = {
+      place_id: 1,
+      table_id: 5,
+      guests: 2,
+      items: currentCart.map((it) => ({
+        product_id: it.product_id,
+        quantity: 1,
+        price: it.price,
+      })),
+    };
+
+    const res = await callApi("POST", "/orders", orderPayload);
+    const orderId =
+      res.data?.payload?.data?.order_id ||
+      res.data?.data?.order_id ||
+      Math.floor(1000 + Math.random() * 9000);
+
+    currentActiveOrderId = orderId;
+    activeOrderId.textContent = `#${orderId}`;
+    activeOrderBox.classList.remove("hidden");
+    activeOrderBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    refreshIcons();
+
+    showToast(
+      `🛒 <b>Kassa buyurtmasi ochildi!</b> #${orderId}-raqamli buyurtma Stol #5 ga yuborildi. Endi "To'lov bilan yopish"ni bosing!`,
+    );
+  }
+};
+
+// ── YANGI TAOM QO'SHISH (PUT /products) ──
 submitAddDishBtn.onclick = async () => {
   const name = newDishName.value.trim();
   const price = Number(newDishPrice.value);
+  const category = newDishCategory.value.trim() || "Boshqa";
   const desc = newDishDesc.value.trim();
 
   if (!name || isNaN(price)) {
@@ -635,7 +698,7 @@ submitAddDishBtn.onclick = async () => {
   }
 
   submitAddDishBtn.disabled = true;
-  submitAddDishBtn.textContent = "Yuborilmoqda...";
+  submitAddDishBtn.innerHTML = `<span>Yuborilmoqda...</span>`;
 
   const payload = {
     payload: [
@@ -650,26 +713,31 @@ submitAddDishBtn.onclick = async () => {
 
   const res = await callApi("PUT", "/products", payload);
   submitAddDishBtn.disabled = false;
-  submitAddDishBtn.textContent = "Saqlash va Yuborish";
+  submitAddDishBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Menyuga Kiritish va Saqlash</span>`;
   addDishModal.classList.add("hidden");
   addDishModal.classList.remove("flex");
 
   const newId =
     res.data?.payload?.data?.[0]?.product_id ||
     res.data?.data?.[0]?.product_id ||
-    Math.floor(100000 + Math.random() * 90000);
     Math.floor(136000 + Math.random() * 9000);
 
-  currentProducts.unshift({ product_id: newId, name, price, enable: true });
+  currentProducts.unshift({
+    product_id: newId,
+    name,
+    price,
+    enable: true,
+    category,
+  });
   productCountBadge.textContent = `${currentProducts.length} taom`;
   renderProductsGrid();
+  showToast(`🎉 "${name}" taomi menyuga muvaffaqiyatli qo'shildi!`);
 };
 
-// ── UPDATE DISH PRICE (PUT /products) ──
+// ── NARXNI TAHRIRLASH (PUT /products) ──
 window.editPricePrompt = async (productId, oldPrice) => {
   const newPriceStr = prompt(
-    `Yangi narxni kiriting (hozirgi: ${oldPrice} UZS):`,
-    `Yangi narxni kiriting (hozirgi: ${oldPrice.toLocaleString()} UZS):`,
+    `Taom narxini o'zgartirish:\nYangi narxni kiriting (hozirgi narx: ${oldPrice.toLocaleString()} UZS):`,
     oldPrice,
   );
   if (!newPriceStr || isNaN(Number(newPriceStr))) return;
@@ -690,14 +758,14 @@ window.editPricePrompt = async (productId, oldPrice) => {
   if (found) {
     found.price = newPrice;
     renderProductsGrid();
+    showToast(
+      `✏️ #${productId} taom narxi ${newPrice.toLocaleString()} UZS ga yangilandi!`,
+    );
   }
 };
 
-// ── DELETE DISH (DELETE /products/{id}) ──
+// ── TAOMNI O'CHIRISH (DELETE /products/{id}) ──
 window.deleteProduct = async (productId) => {
-  if (
-    !confirm(`Haqiqatan ham #${productId} taomni menyudan o'chirmoqchimisiz?`)
-  )
   const product = currentProducts.find((p) => p.product_id === productId);
   const title = product ? product.name : `#${productId}`;
 
@@ -709,23 +777,24 @@ window.deleteProduct = async (productId) => {
   currentProducts = currentProducts.filter((p) => p.product_id !== productId);
   productCountBadge.textContent = `${currentProducts.length} taom`;
   renderProductsGrid();
+  showToast(`🗑 "${title}" menyudan o'chirildi!`);
 };
 
-// ── CART & ORDER FLOW (POST /orders) ──
+// ── SAVAT VA BUYURTMA (POST /orders) ──
 window.addToCart = (productId) => {
   const product = currentProducts.find((p) => p.product_id === productId);
   if (!product) return;
 
-  currentCart.push(product);
   currentCart.push({ ...product });
   updateCartView();
-  showTab("orders");
+  showToast(
+    `🛒 <b>"${product.name}"</b> savatga qo'shildi! Yuqoridagi "2. Kassa & Buyurtma" bo'limiga o'ting.`,
+  );
 };
 
 function updateCartView() {
   if (currentCart.length === 0) {
-    orderItemsList.innerHTML = `<div class="py-4 text-center text-zinc-500 text-xs">Savat bo'sh. Menyu bo'limidan taom qo'shing.</div>`;
-    orderItemsList.innerHTML = `<div class="py-6 text-center text-zinc-500 text-xs">Savat bo'sh. Menyu (CRUD) bo'limidan taom qo'shing.</div>`;
+    orderItemsList.innerHTML = `<div class="py-8 text-center text-zinc-500 text-xs">Savat hozircha bo'sh.<br/>Chapdagi "1. Taomlar & Menyu" bo'limidan taom qo'shing.</div>`;
     orderTotalAmount.textContent = "0 UZS";
     return;
   }
@@ -735,18 +804,17 @@ function updateCartView() {
   currentCart.forEach((item, index) => {
     total += item.price;
     const row = document.createElement("div");
-    row.className = "py-2 flex justify-between items-center text-zinc-300";
     row.className =
-      "py-2 flex justify-between items-center text-zinc-300 text-xs";
+      "py-2.5 flex justify-between items-center text-zinc-200 text-xs";
     row.innerHTML = `
-      <span class="font-medium">${item.name}</span>
-      <div class="flex items-center gap-2">
-      <span class="font-medium truncate mr-2">${item.name}</span>
-      <div class="flex items-center gap-2 shrink-0">
-        <span class="font-mono text-white font-semibold">${Number(item.price).toLocaleString()} UZS</span>
-        <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-0.5">
-        <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-0.5 transition-colors" title="O'chirish">
-          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      <div class="truncate mr-2">
+        <span class="font-bold text-white block truncate">${item.name}</span>
+        <span class="text-[10px] text-zinc-500 font-mono">ID: #${item.product_id}</span>
+      </div>
+      <div class="flex items-center gap-2.5 shrink-0">
+        <span class="font-mono text-red-400 font-bold">${Number(item.price).toLocaleString()} UZS</span>
+        <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-1 transition-colors" title="Savatdan o'chirish">
+          <i data-lucide="trash" class="w-3.5 h-3.5"></i>
         </button>
       </div>
     `;
@@ -788,12 +856,11 @@ createOrderBtn.onclick = async () => {
 
   const res = await callApi("POST", "/orders", orderPayload);
   createOrderBtn.disabled = false;
-  createOrderBtn.textContent = "Buyurtmani yuborish (POST /orders)";
+  createOrderBtn.textContent = "Buyurtmani Yuborish (POST /orders)";
 
   const orderId =
     res.data?.payload?.data?.order_id ||
     res.data?.data?.order_id ||
-    res.data?.data?.id ||
     Math.floor(1000 + Math.random() * 9000);
 
   currentActiveOrderId = orderId;
@@ -801,9 +868,13 @@ createOrderBtn.onclick = async () => {
   activeOrderBox.classList.remove("hidden");
   activeOrderBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
   refreshIcons();
+
+  showToast(
+    `🎉 <b>Yangi Buyurtma #${orderId} ochildi!</b> Oshxonaga uzatildi. Endi to'lov bilan yopishingiz mumkin.`,
+  );
 };
 
-// ── CLOSE ORDER (POST /orders/{id}/close) ──
+// ── BUYURTMANI TO'LOV BILAN YOPISH (POST /orders/{id}/close) ──
 closeOrderBtn.onclick = async () => {
   if (!currentActiveOrderId) return;
 
@@ -812,7 +883,6 @@ closeOrderBtn.onclick = async () => {
   closeOrderBtn.disabled = true;
   closeOrderBtn.textContent = "To'lov yopilmoqda...";
 
-  const total = currentCart.reduce((sum, item) => sum + item.price, 0) || 48000;
   const total = currentCart.reduce((sum, item) => sum + item.price, 0) || 54000;
   const payload = {
     payment_type_id: paymentTypeId,
@@ -821,10 +891,11 @@ closeOrderBtn.onclick = async () => {
 
   await callApi("POST", `/orders/${currentActiveOrderId}/close`, payload);
   closeOrderBtn.disabled = false;
-  closeOrderBtn.textContent = "To'lov bilan yopish (POST /orders/{id}/close)";
+  closeOrderBtn.textContent =
+    "To'lov Bilan Yopish (POST /orders/{id}/close)";
 
-  alert(
-    `🎉 Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi! Kassa kvitansiyasi shakllandi.`,
+  showToast(
+    `🎉 <b>Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi!</b> Kassa kvitansiyasi chiqarildi.`,
   );
   currentCart = [];
   updateCartView();
@@ -832,50 +903,56 @@ closeOrderBtn.onclick = async () => {
   currentActiveOrderId = null;
 };
 
-// ── DICTIONARIES ──
+// ── MA'LUMOTNOMALARNI YUKLASH (DICTIONARIES) ──
 window.fetchDictionary = async (dictType) => {
-  await callApi("GET", `/${dictType}`);
   const res = await callApi("GET", `/${dictType}`);
   if (res.ok && dictDisplayBox) {
     dictDisplayBox.classList.remove("hidden");
-    dictTitle.textContent = `/${dictType} natijalari`;
+    dictTitle.textContent = `/${dictType} ma'lumotlari:`;
     const items = res.data?.payload?.data || res.data?.data || [];
     dictCount.textContent = `${items.length} ta element`;
     dictContentList.innerHTML = items
       .map(
         (it) => `
-        <div class="p-2.5 rounded-xl border border-zinc-800 bg-zinc-950 flex items-center justify-between">
-          <span class="font-bold text-white">${it.name || it.short || `ID: #${it.id}`}</span>
-          <span class="font-mono text-zinc-500 text-[10px]">ID: #${it.id}</span>
+        <div class="p-3 rounded-xl border border-zinc-800 bg-zinc-950 flex items-center justify-between">
+          <div>
+            <span class="font-bold text-white block">${it.name || it.short || `ID: #${it.id}`}</span>
+            ${it.capacity ? `<span class="text-[10px] text-zinc-500">Sig'imi: ${it.capacity} kishi</span>` : ""}
+            ${it.seats ? `<span class="text-[10px] text-zinc-500">O'rinlar: ${it.seats} ta</span>` : ""}
+          </div>
+          <span class="font-mono text-zinc-400 text-xs bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">ID: #${it.id}</span>
         </div>
       `,
       )
       .join("");
+    showToast(
+      `📚 /${dictType} bo'yicha ${items.length} ta ma'lumot yuklandi va konsolda ko'rsatildi!`,
+    );
   }
 };
 
-// ── TAB SWITCHING ──
+// ── TABLARNI ALMASHTIRISH ──
 function showTab(tabName) {
   [tabProducts, tabOrders, tabDicts].forEach((el) =>
     el.classList.add("hidden"),
   );
   [tabProductsBtn, tabOrdersBtn, tabDictsBtn].forEach((btn) => {
     btn.className =
-      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-400 hover:text-white flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-400 hover:text-white flex items-center justify-center gap-2";
   });
 
   if (tabName === "products") {
     tabProducts.classList.remove("hidden");
     tabProductsBtn.className =
-      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
   } else if (tabName === "orders") {
     tabOrders.classList.remove("hidden");
     tabOrdersBtn.className =
-      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
   } else if (tabName === "dicts") {
     tabDicts.classList.remove("hidden");
     tabDictsBtn.className =
-      "flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
   }
 }
 
@@ -893,15 +970,11 @@ closeAddDishModalBtn.onclick = cancelAddDishBtn.onclick = () => {
   addDishModal.classList.remove("flex");
 };
 
-// ── API KEY CONFIG ──
-if (currentApiKey) {
-  apiKeyInput.value = currentApiKey;
-}
+// ── TOKEN SOZLAMALARI ──
 apiKeyInput.value = currentApiKey;
 updateTokenBanner();
 
 saveKeyBtn.onclick = () => {
-  currentApiKey = apiKeyInput.value.trim();
   currentApiKey = apiKeyInput.value.trim() || DEFAULT_API_KEY;
   localStorage.setItem("zimzim_api_key", currentApiKey);
   apiKeyInput.value = currentApiKey;
@@ -912,9 +985,9 @@ saveKeyBtn.onclick = () => {
   setTimeout(() => {
     saveKeyBtn.textContent = "Saqlash";
     saveKeyBtn.className =
-      "px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-all shrink-0";
       "px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-md shadow-red-600/20 transition-all shrink-0";
   }, 1500);
+  showToast("🔑 Yangi API token muvaffaqiyatli saqlandi!");
   loadProducts();
 };
 
@@ -924,6 +997,7 @@ if (resetDemoKeyBtn) {
     localStorage.setItem("zimzim_api_key", currentApiKey);
     apiKeyInput.value = currentApiKey;
     updateTokenBanner();
+    showToast("🟢 Standart demo token tiklandi!");
     loadProducts();
   };
 }
@@ -941,8 +1015,12 @@ toggleKeyVisibility.onclick = () => {
   refreshIcons();
 };
 
-refreshProductsBtn.onclick = () => loadProducts();
+refreshProductsBtn.onclick = () => {
+  loadProducts();
+  showToast("🔄 Menyudagi taomlar yangilandi!");
+};
 
-// Start
+// Dastur ishga tushishi
 loadProducts();
+updateCartView();
 refreshIcons();
