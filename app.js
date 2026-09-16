@@ -1,5 +1,4 @@
 // ============================================================================
-// Zim-Zim Merchant API — Oddiy, Tushunarli va Interaktiv Boshqaruv Skripti
 // Zim-Zim Merchant API — Rasmiy va Interaktiv Boshqaruv Skripti (Real + Sandbox)
 // ============================================================================
 
@@ -13,7 +12,6 @@ if (!currentApiKey) {
   localStorage.setItem("zimzim_api_key", currentApiKey);
 }
 
-// Boshlang'ich demo taomlar ro'yxati (oddiy va tushunarli)
 // Boshlang'ich demo taomlar ro'yxati (Sandbox / Offline holatlar uchun)
 const INITIAL_PRODUCTS = [
   {
@@ -69,7 +67,6 @@ let currentOrgName = null;
 // Jonli konsol holati
 let lastInspectorData = {
   method: "GET",
-  url: "/products?limit=8",
   url: "/products?limit=20&offset=0",
   headers: {
     "Content-Type": "application/json",
@@ -79,7 +76,6 @@ let lastInspectorData = {
   requestBody: null,
   responseStatus: "200 OK",
   responseBody: {
-    message: "Tizim tayyor. Chap tarafdagi biror tugmani bosib sinab ko'ring!",
     message: "Tizim tayyor. Chap tarafdagi biror amalni tanlab sinab ko'ring!",
   },
   latency: 24,
@@ -177,14 +173,12 @@ function showToast(message, type = "success") {
     toast.style.opacity = "0";
     toast.style.transform = "translateY(10px)";
     setTimeout(() => toast.remove(), 300);
-  }, 3500);
   }, 4000);
 }
 
 // ── Token Statusini Yangilash ──
 function updateTokenBanner() {
   const isDemo =
-    currentApiKey === DEFAULT_API_KEY || currentApiKey.startsWith("demo_");
     !currentApiKey ||
     currentApiKey === DEFAULT_API_KEY ||
     currentApiKey.startsWith("demo_");
@@ -192,12 +186,10 @@ function updateTokenBanner() {
   if (isDemo) {
     tokenStatusBar.className =
       "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `🟢 <b>Demo Token faol:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey}</span> — Barcha tugmalarni bemalol bosib sinab ko'rishingiz mumkin!`;
     tokenStatusText.innerHTML = `🟢 <b>Demo Sandbox Rejimi:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey}</span> — Barcha amallarni bemalol bosib sinab ko'rishingiz mumkin!`;
   } else if (currentApiKey) {
     tokenStatusBar.className =
       "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `🟢 <b>Maxfiy Token ulangan:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey.slice(0, 10)}••••••••</span> — Zim-Zim serveriga to'g'ridan-to'g'ri so'rovlar yuborilmoqda.`;
     const orgLabel = currentOrgName ? `<b>${currentOrgName}</b> — ` : "";
     tokenStatusText.innerHTML = `🟢 <b>Jonli Server Ulangan:</b> ${orgLabel}<span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey.slice(0, 10)}••••••••</span> — So'rovlar to'g'ridan-to'g'ri haqiqiy serverga yuborilmoqda.`;
   } else {
@@ -207,7 +199,6 @@ function updateTokenBanner() {
   }
 }
 
-// ── API So'rov Funktsiyasi (Haqiqiy server + Avtomatik Sandbox Simulyatsiyasi) ──
 // ── Haqiqiy API So'rov Funktsiyasi (Real Server + Aniq Xatolar + Demo Fallback) ──
 async function callApi(method, path, body = null) {
   const startTime = Date.now();
@@ -254,17 +245,27 @@ async function callApi(method, path, body = null) {
     fetchError = err.message || "Tarmoq yoki CORS xatosi";
   }
 
-  const latency = Math.max(18, Date.now() - startTime);
+  // MUHIM: HTTP darajasida 200/201 (resOk) kelsa ham, javob "konvertida"
+  // (auth.status yoki payload.status) "ERROR" bo'lishi mumkin. Zim-Zim API
+  // ba'zi ichki xatolarni ham 2xx status bilan qaytaradi — shuning uchun
+  // konvert ichidagi statusni ham albatta tekshirib, xato sifatida hisoblaymiz.
+  const appStatus = realData?.payload?.status || realData?.auth?.status;
+  const hasAppError = Boolean(
+    appStatus === "ERROR" || realData?.payload?.error || realData?.auth?.error,
+  );
+  if (resOk && hasAppError) {
+    resOk = false;
+  }
+
   const latency = Math.max(16, Date.now() - startTime);
 
-  // 2. Agar haqiqiy server 200/201 muvaffaqiyat qaytarsa — o'shani ko'rsatamiz
   // Tashkilot nomini saqlab qolish
   if (realData?.auth?.organization_name) {
     currentOrgName = realData.auth.organization_name;
     updateTokenBanner();
   }
 
-  // 1. Agar REAL token bo'lsa (isDemo === false):
+  // Agar REAL token bo'lsa (isDemo === false):
   // Xatolik bo'lsa ham hech qachon soxta ma'lumot bilan yashirilmaydi!
   // Serverdan nima kelgan bo'lsa, konsolda aynan shu ko'rsatiladi.
   if (!isDemo) {
@@ -320,16 +321,26 @@ async function callApi(method, path, body = null) {
     return { ok: true, status: resStatus, data: realData };
   }
 
-  // 3. Demo / Sandbox rejimi: Foydalanuvchi "prosta tak" barcha jarayonlarni ko'rishi uchun
-  // API spetsifikatsiyasiga to'liq mos formatdagi jonli javob shakllantiriladi:
   // 3. Demo / Sandbox simulyatsiyasi (Zim-Zim API spetsifikatsiyasiga to'liq mos)
   let simulatedData = null;
   let simulatedStatus = "200 OK";
 
-  if (path.startsWith("/products")) {
+  if (path.startsWith("/products/categories")) {
+    simulatedData = {
+      auth: { status: "OK", organization_id: 1 },
+      payload: {
+        status: "OK",
+        data: [
+          { product_id: 101, name: "Shashliklar", is_category: true, parent_id: null },
+          { product_id: 102, name: "Asosiy taomlar", is_category: true, parent_id: null },
+          { product_id: 103, name: "Salatlar", is_category: true, parent_id: null },
+          { product_id: 104, name: "Ichimliklar", is_category: true, parent_id: null },
+        ],
+      },
+    };
+  } else if (path.startsWith("/products")) {
     if (method === "GET") {
       simulatedData = {
-        auth: { status: "SUCCESS" },
         auth: {
           status: "OK",
           organization_id: 1,
@@ -340,7 +351,6 @@ async function callApi(method, path, body = null) {
           data: currentProducts,
           meta: {
             total: currentProducts.length,
-            limit: 8,
             limit: 20,
             offset: 0,
           },
@@ -361,23 +371,15 @@ async function callApi(method, path, body = null) {
         };
       });
       simulatedData = {
-        auth: { status: "SUCCESS" },
-        payload: { data: createdOrUpdated },
         auth: { status: "OK", organization_id: 1 },
         payload: { status: "OK", data: createdOrUpdated },
       };
       simulatedStatus = "200 OK";
     } else if (method === "DELETE") {
-      const id = Number(path.split("/").pop());
       const ids = body?.payload || [];
       simulatedData = {
-        auth: { status: "SUCCESS" },
         auth: { status: "OK", organization_id: 1 },
-        payload: {
-          data: [{ product_id: id, action: "deleted" }],
-          status: "OK",
-          data: { deleted_count: ids.length || 1 },
-        },
+        payload: { status: "OK", data: { deleted_count: ids.length || 1 } },
       };
       simulatedStatus = "200 OK";
     }
@@ -386,15 +388,11 @@ async function callApi(method, path, body = null) {
       const parts = path.split("/");
       const orderId = parts[2];
       simulatedData = {
-        auth: { status: "SUCCESS" },
         auth: { status: "OK", organization_id: 1 },
         payload: {
           status: "OK",
           data: {
             order_id: Number(orderId),
-            status: "CLOSED",
-            payment_type_id: body?.payment_type_id || 1,
-            amount: body?.amount || 0,
             status: 20,
             price: body?.payments?.[0]?.amount || 54000,
             closed_at: new Date().toISOString(),
@@ -410,22 +408,17 @@ async function callApi(method, path, body = null) {
           0,
         ) || 54000;
       simulatedData = {
-        auth: { status: "SUCCESS" },
         auth: { status: "OK", organization_id: 1 },
         payload: {
           status: "OK",
           data: {
             order_id: newOrderId,
-            place_id: body?.place_id || 1,
-            table_id: body?.table_id || 1,
-            guests: body?.guests || 1,
-            status: "OPEN",
-            items: body?.items || [],
             order_number: 1,
             type: body?.type || "takeaway",
             table_id: body?.table_id || null,
             status: 1,
             price: total,
+            goods: body?.dishes || [],
             created_at: new Date().toISOString(),
           },
         },
@@ -434,14 +427,10 @@ async function callApi(method, path, body = null) {
     }
   } else if (path === "/payment-types") {
     simulatedData = {
-      auth: { status: "SUCCESS" },
       auth: { status: "OK", organization_id: 1 },
       payload: {
         status: "OK",
         data: [
-          { id: 1, name: "Naqd pul", is_active: true },
-          { id: 2, name: "Uzcard / Humo (Terminal)", is_active: true },
-          { id: 3, name: "Click / Payme (Online)", is_active: true },
           { payment_type_id: 1, name: "Naqd pul", received_type: "ReceivedCash", vip: false },
           { payment_type_id: 2, name: "Uzcard / Humo (Terminal)", received_type: "Terminal", vip: false },
           { payment_type_id: 3, name: "Click / Payme (Online)", received_type: "Online", vip: false },
@@ -450,14 +439,10 @@ async function callApi(method, path, body = null) {
     };
   } else if (path === "/places") {
     simulatedData = {
-      auth: { status: "SUCCESS" },
       auth: { status: "OK", organization_id: 1 },
       payload: {
         status: "OK",
         data: [
-          { id: 1, name: "Asosiy Zal", capacity: 80 },
-          { id: 2, name: "Yozgi Terassa", capacity: 45 },
-          { id: 3, name: "VIP Xona", capacity: 12 },
           { place_id: 1, name: "Asosiy Zal", price_type: null },
           { place_id: 2, name: "Yozgi Terassa", price_type: null },
           { place_id: 3, name: "VIP Xona", price_type: "extra", extra_price: 50000 },
@@ -466,17 +451,10 @@ async function callApi(method, path, body = null) {
     };
   } else if (path === "/tables") {
     simulatedData = {
-      auth: { status: "SUCCESS" },
       auth: { status: "OK", organization_id: 1 },
       payload: {
         status: "OK",
         data: [
-          { id: 1, name: "Stol 1", place_id: 1, seats: 4 },
-          { id: 2, name: "Stol 2", place_id: 1, seats: 4 },
-          { id: 5, name: "Stol 5 (Markaz)", place_id: 1, seats: 6 },
-          { id: 10, name: "Terassa 1", place_id: 2, seats: 2 },
-          { id: 11, name: "Terassa 2", place_id: 2, seats: 4 },
-          { id: 20, name: "VIP Katta Stol", place_id: 3, seats: 12 },
           { table_id: 1, place_id: 1, number: 1, capacity: 4, status: 0 },
           { table_id: 2, place_id: 1, number: 2, capacity: 4, status: 0 },
           { table_id: 5, place_id: 1, number: 5, capacity: 6, status: 0 },
@@ -487,15 +465,10 @@ async function callApi(method, path, body = null) {
     };
   } else if (path === "/units") {
     simulatedData = {
-      auth: { status: "SUCCESS" },
       auth: { status: "OK", organization_id: 1 },
       payload: {
         status: "OK",
         data: [
-          { id: 1, name: "Dona", short: "dona" },
-          { id: 2, name: "Kilogramm", short: "kg" },
-          { id: 3, name: "Porsiya", short: "pors" },
-          { id: 4, name: "Litr", short: "l" },
           { unit_id: 1, name: "Dona", short_name: "dona" },
           { unit_id: 2, name: "Kilogramm", short_name: "kg" },
           { unit_id: 3, name: "Porsiya", short_name: "pors" },
@@ -503,22 +476,8 @@ async function callApi(method, path, body = null) {
         ],
       },
     };
-  } else if (path === "/products/categories") {
-    simulatedData = {
-      auth: { status: "OK", organization_id: 1 },
-      payload: {
-        status: "OK",
-        data: [
-          { product_id: 101, name: "Shashliklar", is_category: true, parent_id: null },
-          { product_id: 102, name: "Asosiy taomlar", is_category: true, parent_id: null },
-          { product_id: 103, name: "Salatlar", is_category: true, parent_id: null },
-          { product_id: 104, name: "Ichimliklar", is_category: true, parent_id: null },
-        ],
-      },
-    };
   } else {
     simulatedData = {
-      auth: { status: "SUCCESS" },
       auth: { status: "OK", organization_id: 1 },
       payload: { status: "OK", timestamp: Date.now() },
     };
@@ -561,9 +520,21 @@ function updateConsoleView() {
   consoleStatus.textContent = lastInspectorData.responseStatus;
   consoleLatency.textContent = `Kechikish: ${lastInspectorData.latency}ms`;
 
+  // MUHIM: HTTP status matni "200 OK" bo'lsa ham, javob tanasi (auth/payload)
+  // ichida "ERROR" bo'lishi mumkin — konsol shuni ham albatta hisobga oladi,
+  // aks holda foydalanuvchiga xato "muvaffaqiyatli" ko'rinib qoladi.
+  const bodyStatus =
+    lastInspectorData.responseBody?.payload?.status ||
+    lastInspectorData.responseBody?.auth?.status;
+  const hasBodyError = Boolean(
+    bodyStatus === "ERROR" ||
+      lastInspectorData.responseBody?.payload?.error ||
+      lastInspectorData.responseBody?.auth?.error,
+  );
   const isOk =
-    lastInspectorData.responseStatus.startsWith("2") ||
-    lastInspectorData.responseStatus.includes("OK");
+    (lastInspectorData.responseStatus.startsWith("2") ||
+      lastInspectorData.responseStatus.includes("OK")) &&
+    !hasBodyError;
   consoleStatus.className = `font-bold px-2 py-0.5 rounded-full shrink-0 text-xs ${
     isOk ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
   }`;
@@ -576,7 +547,6 @@ function updateConsoleView() {
     );
     consoleOutput.className = isOk
       ? "text-emerald-400 whitespace-pre-wrap break-all"
-      : "text-zinc-300 whitespace-pre-wrap break-all";
       : "text-red-300 whitespace-pre-wrap break-all";
   } else if (activeConsoleTab === "request") {
     consoleOutput.textContent = lastInspectorData.requestBody
@@ -701,13 +671,8 @@ async function loadProducts() {
     </div>
   `;
 
-  const res = await callApi("GET", "/products?limit=8&offset=0");
   const res = await callApi("GET", "/products?limit=20&offset=0");
 
-  if (res.ok && res.data?.payload?.data) {
-    currentProducts = res.data.payload.data;
-  } else if (res.ok && res.data?.data) {
-    currentProducts = res.data.data;
   if (res.ok) {
     const rawItems = res.data?.payload?.data || res.data?.data || [];
     // Faqat taomlarni (kategoriyalarni emas) ajratib olish
@@ -746,7 +711,7 @@ function renderProductsGrid() {
             ${p.enable ? "🟢 Sotuvda bor" : "🔴 Tugagan"}
           </span>
         </div>
-        
+
         <div>
           <h4 class="text-sm font-bold text-white group-hover:text-red-400 transition-colors">${p.name}</h4>
           ${p.category ? `<span class="text-[10px] text-zinc-400 font-medium">${p.category}</span>` : ""}
@@ -800,29 +765,12 @@ window.quickTest = async (action) => {
     };
 
     const res = await callApi("PUT", "/products", payload);
-    const newId =
-      res.data?.payload?.data?.[0]?.product_id ||
-      res.data?.data?.[0]?.product_id ||
-      Math.floor(136000 + Math.random() * 9000);
     if (res.ok) {
       const newId =
         res.data?.payload?.data?.[0]?.product_id ||
         res.data?.data?.[0]?.product_id ||
         Math.floor(136000 + Math.random() * 9000);
 
-    currentProducts.unshift({
-      product_id: newId,
-      name,
-      price,
-      enable: true,
-      category: "Tezkor sinov",
-    });
-    productCountBadge.textContent = `${currentProducts.length} taom`;
-    renderProductsGrid();
-    showTab("products");
-    showToast(
-      `🎉 <b>Yangi taom qo'shildi:</b> "${name}" (${price.toLocaleString()} UZS). Konsolda PUT javobi ko'rinmoqda!`,
-    );
       currentProducts.unshift({
         product_id: newId,
         name,
@@ -838,7 +786,6 @@ window.quickTest = async (action) => {
       );
     }
   } else if (action === "update") {
-    if (currentProducts.length === 0) return;
     if (currentProducts.length === 0) {
       showToast("⚠️ Yangilash uchun avval menyuda taom bo'lishi kerak", "error");
       return;
@@ -856,13 +803,6 @@ window.quickTest = async (action) => {
       ],
     };
 
-    await callApi("PUT", "/products", payload);
-    dish.price = newPrice;
-    renderProductsGrid();
-    showTab("products");
-    showToast(
-      `✏️ <b>Narx yangilandi:</b> "${dish.name}" narxi ${newPrice.toLocaleString()} UZS ga o'zgardi!`,
-    );
     const res = await callApi("PUT", "/products", payload);
     if (res.ok) {
       dish.price = newPrice;
@@ -877,26 +817,16 @@ window.quickTest = async (action) => {
       showToast("⚠️ Buyurtma ochish uchun menyuda kamida bitta taom bo'lishi kerak", "error");
       return;
     }
-    // 1-va 2-taomlarni savatga solish
+    // 1- va 2-taomlarni savatga solish
     currentCart = [
-      { ...currentProducts[0] },
-      { ...(currentProducts[1] || currentProducts[0]) },
       { ...currentProducts[0], quantity: 1 },
       { ...(currentProducts[1] || currentProducts[0]), quantity: 1 },
     ];
     updateCartView();
     showTab("orders");
 
-    // Buyurtma yaratish
     // Buyurtma yaratish (takeaway barcha restoranlarda stol talab qilmasdan 100% ishlaydi)
     const orderPayload = {
-      place_id: 1,
-      table_id: 5,
-      guests: 2,
-      items: currentCart.map((it) => ({
-        product_id: it.product_id,
-        quantity: 1,
-        price: it.price,
       type: "takeaway",
       dishes: currentCart.map((it) => ({
         product_id: Number(it.product_id),
@@ -907,30 +837,17 @@ window.quickTest = async (action) => {
     };
 
     const res = await callApi("POST", "/orders", orderPayload);
-    const orderId =
-      res.data?.payload?.data?.order_id ||
-      res.data?.data?.order_id ||
-      Math.floor(1000 + Math.random() * 9000);
     if (res.ok) {
       const orderId =
         res.data?.payload?.data?.order_id ||
         res.data?.data?.order_id ||
         res.data?.order_id ||
         Math.floor(1000 + Math.random() * 9000);
-
-    currentActiveOrderId = orderId;
-    activeOrderId.textContent = `#${orderId}`;
-    activeOrderBox.classList.remove("hidden");
-    activeOrderBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    refreshIcons();
       const orderPrice =
         res.data?.payload?.data?.price ||
         res.data?.data?.price ||
         currentCart.reduce((sum, it) => sum + it.price * (it.quantity || 1), 0);
 
-    showToast(
-      `🛒 <b>Kassa buyurtmasi ochildi!</b> #${orderId}-raqamli buyurtma Stol #5 ga yuborildi. Endi "To'lov bilan yopish"ni bosing!`,
-    );
       currentActiveOrderId = orderId;
       currentActiveOrderAmount = orderPrice;
       activeOrderId.textContent = `#${orderId}`;
@@ -952,8 +869,6 @@ submitAddDishBtn.onclick = async () => {
   const category = newDishCategory.value.trim() || "Boshqa";
   const desc = newDishDesc.value.trim();
 
-  if (!name || isNaN(price)) {
-    alert("Iltimos, taom nomi va narxini to'g'ri kiriting!");
   if (!name || isNaN(price) || price <= 0) {
     alert("Iltimos, taom nomi va to'g'ri narxini kiriting!");
     return;
@@ -979,26 +894,12 @@ submitAddDishBtn.onclick = async () => {
   addDishModal.classList.add("hidden");
   addDishModal.classList.remove("flex");
 
-  const newId =
-    res.data?.payload?.data?.[0]?.product_id ||
-    res.data?.data?.[0]?.product_id ||
-    Math.floor(136000 + Math.random() * 9000);
   if (res.ok) {
     const newId =
       res.data?.payload?.data?.[0]?.product_id ||
       res.data?.data?.[0]?.product_id ||
       Math.floor(136000 + Math.random() * 9000);
 
-  currentProducts.unshift({
-    product_id: newId,
-    name,
-    price,
-    enable: true,
-    category,
-  });
-  productCountBadge.textContent = `${currentProducts.length} taom`;
-  renderProductsGrid();
-  showToast(`🎉 "${name}" taomi menyuga muvaffaqiyatli qo'shildi!`);
     currentProducts.unshift({
       product_id: newId,
       name,
@@ -1015,7 +916,6 @@ submitAddDishBtn.onclick = async () => {
 // ── NARXNI TAHRIRLASH (PUT /products) ──
 window.editPricePrompt = async (productId, oldPrice) => {
   const newPriceStr = prompt(
-    `Taom narxini o'zgartirish:\nYangi narxni kiriting (hozirgi narx: ${oldPrice.toLocaleString()} UZS):`,
     `Taom narxini o'zgartirish:\nYangi narxni kiriting (hozirgi narx: ${Number(oldPrice).toLocaleString()} UZS):`,
     oldPrice,
   );
@@ -1025,7 +925,6 @@ window.editPricePrompt = async (productId, oldPrice) => {
   const payload = {
     payload: [
       {
-        product_id: productId,
         product_id: Number(productId),
         price: newPrice,
         enable: true,
@@ -1033,17 +932,11 @@ window.editPricePrompt = async (productId, oldPrice) => {
     ],
   };
 
-  await callApi("PUT", "/products", payload);
-  const found = currentProducts.find((p) => p.product_id === productId);
-  if (found) {
-    found.price = newPrice;
-    renderProductsGrid();
-    showToast(
-      `✏️ #${productId} taom narxi ${newPrice.toLocaleString()} UZS ga yangilandi!`,
-    );
   const res = await callApi("PUT", "/products", payload);
   if (res.ok) {
-    const found = currentProducts.find((p) => Number(p.product_id) === Number(productId));
+    const found = currentProducts.find(
+      (p) => Number(p.product_id) === Number(productId),
+    );
     if (found) {
       found.price = newPrice;
       renderProductsGrid();
@@ -1054,12 +947,12 @@ window.editPricePrompt = async (productId, oldPrice) => {
   }
 };
 
-// ── TAOMNI O'CHIRISH (DELETE /products/{id}) ──
 // ── TAOMNI O'CHIRISH (DELETE /products) ──
 // DIQQAT: Rasmiy Zim-Zim API da DELETE /products { payload: [id] } ishlatiladi!
 window.deleteProduct = async (productId) => {
-  const product = currentProducts.find((p) => p.product_id === productId);
-  const product = currentProducts.find((p) => Number(p.product_id) === Number(productId));
+  const product = currentProducts.find(
+    (p) => Number(p.product_id) === Number(productId),
+  );
   const title = product ? product.name : `#${productId}`;
 
   if (
@@ -1068,17 +961,14 @@ window.deleteProduct = async (productId) => {
     return;
   }
 
-  await callApi("DELETE", `/products/${productId}`);
-  currentProducts = currentProducts.filter((p) => p.product_id !== productId);
-  productCountBadge.textContent = `${currentProducts.length} taom`;
-  renderProductsGrid();
-  showToast(`🗑 "${title}" menyudan o'chirildi!`);
   const res = await callApi("DELETE", "/products", {
     payload: [Number(productId)],
   });
 
   if (res.ok) {
-    currentProducts = currentProducts.filter((p) => Number(p.product_id) !== Number(productId));
+    currentProducts = currentProducts.filter(
+      (p) => Number(p.product_id) !== Number(productId),
+    );
     productCountBadge.textContent = `${currentProducts.length} taom`;
     renderProductsGrid();
     showToast(`🗑 "${title}" menyudan o'chirildi!`);
@@ -1087,12 +977,14 @@ window.deleteProduct = async (productId) => {
 
 // ── SAVAT VA BUYURTMA (POST /orders) ──
 window.addToCart = (productId) => {
-  const product = currentProducts.find((p) => p.product_id === productId);
-  const product = currentProducts.find((p) => Number(p.product_id) === Number(productId));
+  const product = currentProducts.find(
+    (p) => Number(p.product_id) === Number(productId),
+  );
   if (!product) return;
 
-  currentCart.push({ ...product });
-  const existing = currentCart.find((it) => Number(it.product_id) === Number(productId));
+  const existing = currentCart.find(
+    (it) => Number(it.product_id) === Number(productId),
+  );
   if (existing) {
     existing.quantity = (existing.quantity || 1) + 1;
   } else {
@@ -1115,7 +1007,6 @@ function updateCartView() {
   orderItemsList.innerHTML = "";
   let total = 0;
   currentCart.forEach((item, index) => {
-    total += item.price;
     const qty = item.quantity || 1;
     const subtotal = item.price * qty;
     total += subtotal;
@@ -1126,11 +1017,9 @@ function updateCartView() {
     row.innerHTML = `
       <div class="truncate mr-2">
         <span class="font-bold text-white block truncate">${item.name}</span>
-        <span class="text-[10px] text-zinc-500 font-mono">ID: #${item.product_id}</span>
         <span class="text-[10px] text-zinc-500 font-mono">ID: #${item.product_id} • ${Number(item.price).toLocaleString()} x ${qty}</span>
       </div>
       <div class="flex items-center gap-2.5 shrink-0">
-        <span class="font-mono text-red-400 font-bold">${Number(item.price).toLocaleString()} UZS</span>
         <span class="font-mono text-red-400 font-bold">${subtotal.toLocaleString()} UZS</span>
         <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-1 transition-colors" title="Savatdan o'chirish">
           <i data-lucide="trash" class="w-3.5 h-3.5"></i>
@@ -1166,21 +1055,11 @@ createOrderBtn.onclick = async () => {
     return;
   }
 
-  const placeId = Number(document.getElementById("orderPlaceSelect").value);
-  const tableId = Number(document.getElementById("orderTableInput").value);
-  const guests = Number(document.getElementById("orderGuestsInput").value);
   const orderType = orderTypeSelect?.value || "takeaway";
   const clientPhone = orderPhoneInput?.value.trim() || "+998901234567";
 
   // DIQQAT: Rasmiy Zim-Zim API da type (table/takeaway/delivery) va dishes[] kutiladi!
   const orderPayload = {
-    place_id: placeId,
-    table_id: tableId,
-    guests,
-    items: currentCart.map((item) => ({
-      product_id: item.product_id,
-      quantity: 1,
-      price: item.price,
     type: orderType,
     dishes: currentCart.map((item) => ({
       product_id: Number(item.product_id),
@@ -1191,8 +1070,7 @@ createOrderBtn.onclick = async () => {
   };
 
   if (orderType === "table") {
-    const tableId = Number(orderTableSelect?.value || 1);
-    orderPayload.table_id = tableId;
+    orderPayload.table_id = Number(orderTableSelect?.value || 1);
   }
 
   createOrderBtn.disabled = true;
@@ -1202,30 +1080,17 @@ createOrderBtn.onclick = async () => {
   createOrderBtn.disabled = false;
   createOrderBtn.textContent = "Buyurtmani Yuborish (POST /orders)";
 
-  const orderId =
-    res.data?.payload?.data?.order_id ||
-    res.data?.data?.order_id ||
-    Math.floor(1000 + Math.random() * 9000);
   if (res.ok) {
     const orderId =
       res.data?.payload?.data?.order_id ||
       res.data?.data?.order_id ||
       res.data?.order_id ||
       Math.floor(1000 + Math.random() * 9000);
-
-  currentActiveOrderId = orderId;
-  activeOrderId.textContent = `#${orderId}`;
-  activeOrderBox.classList.remove("hidden");
-  activeOrderBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  refreshIcons();
     const totalAmount =
       res.data?.payload?.data?.price ||
       res.data?.data?.price ||
       currentCart.reduce((sum, it) => sum + it.price * (it.quantity || 1), 0);
 
-  showToast(
-    `🎉 <b>Yangi Buyurtma #${orderId} ochildi!</b> Oshxonaga uzatildi. Endi to'lov bilan yopishingiz mumkin.`,
-  );
     currentActiveOrderId = orderId;
     currentActiveOrderAmount = totalAmount;
     activeOrderId.textContent = `#${orderId}`;
@@ -1245,20 +1110,16 @@ closeOrderBtn.onclick = async () => {
   if (!currentActiveOrderId) return;
 
   const paymentTypeId =
-    Number(document.getElementById("paymentTypeSelect").value) || 1;
     Number(document.getElementById("paymentTypeSelect")?.value) || 1;
   closeOrderBtn.disabled = true;
   closeOrderBtn.textContent = "To'lov yopilmoqda...";
 
-  const total = currentCart.reduce((sum, item) => sum + item.price, 0) || 54000;
   const total =
     currentActiveOrderAmount ||
     currentCart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0) ||
     34000;
 
   const payload = {
-    payment_type_id: paymentTypeId,
-    amount: total,
     payments: [
       {
         payment_type_id: paymentTypeId,
@@ -1267,7 +1128,6 @@ closeOrderBtn.onclick = async () => {
     ],
   };
 
-  await callApi("POST", `/orders/${currentActiveOrderId}/close`, payload);
   const res = await callApi(
     "POST",
     `/orders/${currentActiveOrderId}/close`,
@@ -1276,13 +1136,6 @@ closeOrderBtn.onclick = async () => {
   closeOrderBtn.disabled = false;
   closeOrderBtn.textContent = "To'lov Bilan Yopish (POST /orders/{id}/close)";
 
-  showToast(
-    `🎉 <b>Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi!</b> Kassa kvitansiyasi chiqarildi.`,
-  );
-  currentCart = [];
-  updateCartView();
-  activeOrderBox.classList.add("hidden");
-  currentActiveOrderId = null;
   if (res.ok) {
     showToast(
       `🎉 <b>Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi!</b> Kassa kvitansiyasi chiqarildi.`,
@@ -1297,13 +1150,11 @@ closeOrderBtn.onclick = async () => {
 
 // ── MA'LUMOTNOMALARNI YUKLASH (DICTIONARIES) ──
 window.fetchDictionary = async (dictType) => {
-  const res = await callApi("GET", `/${dictType}`);
   const normalizedPath = dictType.startsWith("/") ? dictType : `/${dictType}`;
   const res = await callApi("GET", normalizedPath);
 
   if (res.ok && dictDisplayBox) {
     dictDisplayBox.classList.remove("hidden");
-    dictTitle.textContent = `/${dictType} ma'lumotlari:`;
     dictTitle.textContent = `${normalizedPath} ma'lumotlari:`;
     const items = res.data?.payload?.data || res.data?.data || [];
     dictCount.textContent = `${items.length} ta element`;
@@ -1312,20 +1163,17 @@ window.fetchDictionary = async (dictType) => {
         (it) => `
         <div class="p-3 rounded-xl border border-zinc-800 bg-zinc-950 flex items-center justify-between">
           <div>
-            <span class="font-bold text-white block">${it.name || it.short || `ID: #${it.id}`}</span>
             <span class="font-bold text-white block">${it.name || it.short_name || it.short || `ID: #${it.id || it.product_id || it.payment_type_id || it.table_id || it.place_id || it.unit_id}`}</span>
             ${it.capacity ? `<span class="text-[10px] text-zinc-500">Sig'imi: ${it.capacity} kishi</span>` : ""}
             ${it.seats ? `<span class="text-[10px] text-zinc-500">O'rinlar: ${it.seats} ta</span>` : ""}
             ${it.number ? `<span class="text-[10px] text-zinc-500">Stol raqami: #${it.number}</span>` : ""}
           </div>
-          <span class="font-mono text-zinc-400 text-xs bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">ID: #${it.id}</span>
           <span class="font-mono text-zinc-400 text-xs bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">ID: #${it.id || it.product_id || it.payment_type_id || it.table_id || it.place_id || it.unit_id}</span>
         </div>
       `,
       )
       .join("");
     showToast(
-      `📚 /${dictType} bo'yicha ${items.length} ta ma'lumot yuklandi va konsolda ko'rsatildi!`,
       `📚 ${normalizedPath} bo'yicha ${items.length} ta ma'lumot yuklandi va konsolda ko'rsatildi!`,
     );
   }
@@ -1428,4 +1276,3 @@ refreshProductsBtn.onclick = () => {
 loadProducts();
 loadOrganizationMeta();
 updateCartView();
-refreshIcons();

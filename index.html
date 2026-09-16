@@ -264,8 +264,7 @@
                       class="w-5 h-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center font-bold"
                       >1</span
                     >
-                    <span>Zal va Stolni tanlash</span>
-                    <span>1. Buyurtma parametri</span>
+                    <span>Buyurtma parametri</span>
                   </h4>
                   <span class="text-[10px] text-zinc-500 font-mono"
                     >POST /orders</span
@@ -274,34 +273,18 @@
                 <div class="space-y-3 text-xs">
                   <div>
                     <label class="block text-zinc-400 mb-1 font-medium"
-                      >Restoran Zali (place_id):</label
                       >Xizmat turi (type):</label
                     >
                     <select
-                      id="orderPlaceSelect"
-                      class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-red-500"
                       id="orderTypeSelect"
                       class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-red-500 font-medium"
                     >
-                      <option value="1">🏛️ Asosiy Zal (ID: 1)</option>
-                      <option value="2">🌿 Yozgi Terassa (ID: 2)</option>
-                      <option value="3">👑 VIP Xona (ID: 3)</option>
                       <option value="takeaway" selected>🛍️ Olib ketish / Kassa (takeaway — Stol talab qilinmaydi)</option>
                       <option value="table">🍽️ Stolda xizmat ko'rsatish (table)</option>
                       <option value="delivery">🚗 Yetkazib berish (delivery)</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label class="block text-zinc-400 mb-1 font-medium"
-                      >Stol Raqami (table_id):</label
-                    >
-                    <input
-                      type="number"
-                      id="orderTableInput"
-                      value="5"
-                      class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 font-mono focus:outline-none focus:border-red-500"
-                    />
                   <div id="tableFieldsGroup" class="space-y-3 hidden">
                     <div>
                       <label class="block text-zinc-400 mb-1 font-medium"
@@ -333,13 +316,9 @@
 
                   <div>
                     <label class="block text-zinc-400 mb-1 font-medium"
-                      >Mehmonlar Soni (guests):</label
                       >Mijoz telefoni (client_phone):</label
                     >
                     <input
-                      type="number"
-                      id="orderGuestsInput"
-                      value="2"
                       type="text"
                       id="orderPhoneInput"
                       value="+998901234567"
