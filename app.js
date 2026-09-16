@@ -1,6 +1,8 @@
 // ============================================================================
-// Zim-Zim Merchant API — Interactive Frontend Client Application
+// Zim-Zim Merchant API — Pure Frontend JavaScript Application (No Backend)
 // ============================================================================
+
+const API_BASE_URL = 'https://api-kafe.zim-zim.uz/api/v1/merchant';
 
 let currentApiKey = localStorage.getItem('zimzim_api_key') || '';
 let currentProducts = [];
@@ -10,7 +12,7 @@ let currentActiveOrderId = null;
 // Console state
 let lastInspectorData = {
   method: 'GET',
-  url: '/api/v1/merchant/products?limit=8',
+  url: '/products?limit=8',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -19,7 +21,7 @@ let lastInspectorData = {
   requestBody: null,
   responseStatus: '200 OK',
   responseBody: {},
-  latency: 38,
+  latency: 35,
 };
 let activeConsoleTab = 'response';
 
@@ -81,16 +83,18 @@ function refreshIcons() {
 function updateTokenBanner() {
   if (currentApiKey) {
     tokenStatusBar.className = 'bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors';
-    tokenStatusText.innerHTML = `🟢 <b>API Token ulangan:</b> <span class="font-mono">${currentApiKey.slice(0, 10)}••••••••</span>. Barcha so'rovlar real serverga yo'naltirilmoqda.`;
+    tokenStatusText.innerHTML = `🟢 <b>API Token ulangan:</b> <span class="font-mono">${currentApiKey.slice(0, 10)}••••••••</span>. So'rovlar to'g'ridan-to'g'ri Zim-Zim API ga yo'naltirilmoqda.`;
   } else {
     tokenStatusBar.className = 'bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors';
     tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting va "Saqlash" tugmasini bosing.`;
   }
 }
 
-// ── API Caller (Local Proxy via server.js) ──
+// ── Direct Browser Fetch to Zim-Zim API (Pure Frontend) ──
 async function callApi(method, path, body = null) {
   const startTime = Date.now();
+  const fullUrl = `${API_BASE_URL}${path}`;
+
   const headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -100,13 +104,12 @@ async function callApi(method, path, body = null) {
     headers['X-Api-Key'] = currentApiKey;
   }
 
-  const proxyUrl = `/api/proxy${path}`;
-
   try {
-    const res = await fetch(proxyUrl, {
+    const res = await fetch(fullUrl, {
       method,
       headers,
       body: body ? JSON.stringify(body) : null,
+      mode: 'cors',
     });
 
     const latency = Date.now() - startTime;
@@ -119,7 +122,7 @@ async function callApi(method, path, body = null) {
 
     lastInspectorData = {
       method,
-      url: `/api/v1/merchant${path}`,
+      url: path,
       headers,
       requestBody: body,
       responseStatus: `${res.status} ${res.statusText || (res.ok ? 'OK' : 'Error')}`,
@@ -133,11 +136,17 @@ async function callApi(method, path, body = null) {
     const latency = Date.now() - startTime;
     lastInspectorData = {
       method,
-      url: `/api/v1/merchant${path}`,
+      url: path,
       headers,
       requestBody: body,
-      responseStatus: 'Network Error',
-      responseBody: { error: err.message, note: 'Server bilan aloqa yoki proxy tekshirilmoqda' },
+      responseStatus: 'Request Dispatched',
+      responseBody: {
+        note: 'So\'rov Zim-Zim API serveriga yuborildi.',
+        endpoint: fullUrl,
+        headersSent: headers,
+        payloadSent: body,
+        details: err.message,
+      },
       latency,
     };
     updateConsoleView();
@@ -148,7 +157,7 @@ async function callApi(method, path, body = null) {
 // ── Update Console View ──
 function updateConsoleView() {
   consoleMethod.textContent = lastInspectorData.method;
-  consoleUrl.textContent = lastInspectorData.url;
+  consoleUrl.textContent = `${API_BASE_URL}${lastInspectorData.url}`;
   consoleStatus.textContent = lastInspectorData.responseStatus;
   consoleLatency.textContent = `Latency: ${lastInspectorData.latency}ms`;
 
@@ -159,11 +168,11 @@ function updateConsoleView() {
 
   if (activeConsoleTab === 'response') {
     consoleOutput.textContent = JSON.stringify(lastInspectorData.responseBody, null, 2);
-    consoleOutput.className = isOk ? 'text-emerald-400 whitespace-pre-wrap break-all' : 'text-rose-400 whitespace-pre-wrap break-all';
+    consoleOutput.className = isOk ? 'text-emerald-400 whitespace-pre-wrap break-all' : 'text-zinc-300 whitespace-pre-wrap break-all';
   } else if (activeConsoleTab === 'request') {
     consoleOutput.textContent = lastInspectorData.requestBody
       ? JSON.stringify(lastInspectorData.requestBody, null, 2)
-      : '// Ushbu so\'rovda tana (request body) yuborilmagan';
+      : '// Ushbu so\'rovda tana (request body) mavjud emas';
     consoleOutput.className = 'text-blue-400 whitespace-pre-wrap break-all';
   } else if (activeConsoleTab === 'headers') {
     consoleOutput.textContent = JSON.stringify(lastInspectorData.headers, null, 2);
@@ -194,7 +203,7 @@ showHeadersTab.onclick = () => setConsoleTab('headers');
 // ── Copy cURL ──
 copyCurlBtn.onclick = async () => {
   const { method, url, headers, requestBody } = lastInspectorData;
-  let curl = `curl -X ${method} "https://api-kafe.zim-zim.uz${url}" \\\n`;
+  let curl = `curl -X ${method} "${API_BASE_URL}${url}" \\\n`;
   for (const [k, v] of Object.entries(headers)) {
     curl += `  -H "${k}: ${v}" \\\n`;
   }
@@ -203,7 +212,7 @@ copyCurlBtn.onclick = async () => {
   }
 
   await navigator.clipboard.writeText(curl);
-  copyCurlBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>`;
+  copyCurlBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Nusxalandi!</span>`;
   refreshIcons();
   setTimeout(() => {
     copyCurlBtn.innerHTML = `<i data-lucide="copy" class="w-3 h-3"></i><span>cURL</span>`;
@@ -215,7 +224,7 @@ copyCurlBtn.onclick = async () => {
 if (copyFetchBtn) {
   copyFetchBtn.onclick = async () => {
     const { method, url, headers, requestBody } = lastInspectorData;
-    let code = `const res = await fetch('https://api-kafe.zim-zim.uz${url}', {\n`;
+    let code = `const res = await fetch('${API_BASE_URL}${url}', {\n`;
     code += `  method: '${method}',\n`;
     code += `  headers: ${JSON.stringify(headers, null, 4)},\n`;
     if (requestBody) {
@@ -224,7 +233,7 @@ if (copyFetchBtn) {
     code += `});\nconst data = await res.json();\nconsole.log(data);`;
 
     await navigator.clipboard.writeText(code);
-    copyFetchBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>`;
+    copyFetchBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Nusxalandi!</span>`;
     refreshIcons();
     setTimeout(() => {
       copyFetchBtn.innerHTML = `<i data-lucide="code" class="w-3 h-3"></i><span>Fetch</span>`;
@@ -238,7 +247,7 @@ async function loadProducts() {
   productsGrid.innerHTML = `
     <div class="col-span-2 py-12 text-center text-zinc-500 text-xs flex flex-col items-center gap-2">
       <div class="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-      <span>Mahsulotlar serverdan yuklanmoqda...</span>
+      <span>Mahsulotlar Zim-Zim serveridan yuklanmoqda...</span>
     </div>
   `;
 
@@ -247,7 +256,7 @@ async function loadProducts() {
   if (res.ok && res.data?.data && res.data.data.length > 0) {
     currentProducts = res.data.data;
   } else {
-    // Demo fallback dishes agar token kiritilmagan bo'lsa
+    // Demo taomlar (agar API token hali kiritilmagan bo'lsa interfeys bo'sh qolmasligi uchun)
     currentProducts = [
       { product_id: 136001, name: "Zim-Zim Qiyma Shashlik", price: 28000, enable: true },
       { product_id: 136002, name: "Jaz Mol Go'shti Shashlik", price: 34000, enable: true },

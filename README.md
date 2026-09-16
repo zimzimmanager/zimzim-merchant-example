@@ -1,22 +1,22 @@
-# 🍕 Zim-Zim Merchant API — Interactive Web App & CRUD Playground
+# 🍕 Zim-Zim Merchant API — Pure HTML & CSS Interactive Web App
 
-Ushbu repozitoriy **Zim-Zim Merchant API** bilan integratsiya qiluvchi dasturchilar uchun tayyorlangan **to'liq ishchi interaktiv veb-ilova (Live Playground)** hisoblanadi.
+Ushbu repozitoriy **Zim-Zim Merchant API** bilan integratsiya qiluvchi dasturchilar uchun tayyorlangan **toza frontend (Pure HTML5 + CSS + JavaScript)** loyihasidir.
 
-Siz ushbu ilovaga o'z tashkilotingizning `X-Api-Key` maxfiy tokenini kiritib, to'g'ridan-to'g'ri brauzer orqali menyuni ko'rishingiz, yangi taomlar qo'shishingiz, narxlarni o'zgartirishingiz, kassa buyurtmalarini ochishingiz va to'lov bilan yopishingiz mumkin.
+Hech qanday backend, Node.js yoki og'ir server aralashmagan. Siz shunchaki `index.html` faylini brauzeringizda ochib, o'z `X-Api-Key` tokeningizni kiritgan holda barcha CRUD va kassa amallarini jonli sinab ko'rishingiz mumkin!
 
 ---
 
 ## ⚡️ Asosiy Imkoniyatlar
 
-1. **🍽️ Menyu va Taomlar Boshqaruvi (Full CRUD):**
+1. **🍽️ Menyu va Mahsulotlar (Full CRUD):**
    - `GET /products` — Menyu taomlari ro'yxatini yuklash va ko'rish
    - `PUT /products` — Yangi taom yaratish (Upsert)
-   - `PUT /products` — Mavjud taom narxi va mavjudligini bir zumda yangilash
+   - `PUT /products` — Taom narxini o'zgartirish (inline prompt/modal)
    - `DELETE /products/{id}` — Taomni menyudan xavfsiz (soft-delete) o'chirish
 2. **🧾 Kassa va Buyurtmalar Oqimi (POS Checkout Flow):**
    - Restoran zali (`place_id`) va stoli (`table_id`)ni tanlash
    - Mehmonlar sonini ko'rsatish
-   - Taomlarni interaktiv savatga yig'ib, `POST /orders` so'rovi bilan yangi buyurtma ochish
+   - Taomlarni savatga to'plab, `POST /orders` so'rovi bilan buyurtma ochish
    - Ochilgan buyurtmani to'lov turi (Naqd, Karta, Click/Payme) bilan `POST /orders/{id}/close` orqali yopish
 3. **📋 Tizim Ma'lumotnomalari (Dictionaries):**
    - `GET /payment-types` — Qabul qilinadigan to'lov turlari
@@ -26,60 +26,50 @@ Siz ushbu ilovaga o'z tashkilotingizning `X-Api-Key` maxfiy tokenini kiritib, to
 4. **🔍 Real-Time API Inspector (Jonli Konsol):**
    - Har bir harakatda real vaqtda **Request URL**, **Headers (X-Api-Key)**, **Request Payload**, **Response Status** va **Formatlangan JSON** ko'rsatiladi.
    - Bitta bosish bilan **cURL** yoki **JavaScript Fetch** kodini nusxalash mumkin!
-5. **🛡️ O'rnatilgan CORS Proxy (Zero-dependency):**
-   - Brauzerda xavfsizlik cheklovlari (CORS) sababli so'rovlar to'xtab qolmasligi uchun `server.js` orqali shaffof proxy ta'minlangan.
 
 ---
 
-## 🚀 O'rnatish va Ishga Tushirish
+## 🚀 Ishga Tushirish (Juda Oson!)
 
-Loyihada hech qanday og'ir paketlar yoki murakkab sozlashlar yo'q (Faqat Node.js o'zining built-in `http` va `https` modullari ishlatilgan):
+Hech qanday `npm install` yoki server kerak emas:
 
-```bash
-# 1. Reponi yuklab oling:
-git clone https://github.com/zimzimmanager/zimzim-merchant-example.git
-cd zimzim-merchant-example
-
-# 2. Serverni ishga tushiring:
-npm start
-# yoki:
-node server.js
-```
-
-So'ngra brauzeringizda quyidagi manzilni oching:
-👉 **[http://localhost:3030](http://localhost:3030)**
+1. Repozitoriyni yuklab oling:
+   ```bash
+   git clone https://github.com/zimzimmanager/zimzim-merchant-example.git
+   cd zimzim-merchant-example
+   ```
+2. **`index.html` faylini brauzeringizda oching:**
+   - MacOS: `open index.html`
+   - Windows: Faylni sichqoncha bilan ikki marta bosing (yoki VS Code Live Server bilan oching)
+   - Linux: `xdg-open index.html`
 
 ---
 
 ## 🔑 API Tokenni Qo'yish va Ishlatish
 
-1. Ekranning yuqori o'ng burchagidagi qutiga **`X-Api-Key`** maxfiy tokeningizni kiriting.
-2. **"Saqlash"** tugmasini bosing — token xavfsiz tarzda brauzeringizning `localStorage` xotirasida saqlanadi.
-3. Yuqoridagi holat paneli yashil rangga kiradi: `🟢 API Token ulangan`.
-4. **"GET /products"** tugmasini bosing — o'z tashkilotingiz menyusidagi barcha taomlar bir zumda ekranda kartalar ko'rinishida paydo bo'ladi!
-5. O'ng tarafdagi konsolda har bir yuborilgan so'rovning to'liq JSON javobi va cURL kodi ko'rinib turadi.
+1. Sayt ochilgach, yuqori o'ng burchakdagi qutiga tashkilotingizning **`X-Api-Key`** maxfiy tokenini kiriting.
+2. **"Saqlash"** tugmasini bosing — token xavfsiz tarzda brauzeringizning `localStorage` xotirasiga saqlanadi.
+3. Holat paneli yashil bo'ladi: `🟢 API Token ulangan`.
+4. **"GET /products"** tugmasini bosing — menyudagi barcha taomlar bir zumda ekranda kartalar ko'rinishida paydo bo'ladi!
+5. O'ng tarafdagi konsolda har bir yuborilgan so'rovning to'liq JSON javobi va cURL kodi ko'rinadi.
 
 ---
 
-## 📁 Loyiha Tuzilishi
+## 📁 Loyiha Tuzilishi (Pure Static Frontend)
 
 ```
 zimzim-merchant-example/
-├── package.json          # Loyiha ma'lumotlari va start skripti
-├── server.js             # Built-in HTTP server va CORS Proxy
-├── public/
-│   ├── index.html        # Asosiy interaktiv POS & CRUD Dashboard
-│   ├── app.js            # API so'rovlar, savat, konsol va CRUD logikasi
-│   ├── logo.png          # Zim-Zim brend logotipi
-│   └── favicon.png       # Ilova belgisi
-└── README.md             # To'liq hujjatlar
+├── index.html        # Asosiy interaktiv POS & CRUD Dashboard (HTML5)
+├── style.css         # Zamonaviy qorong'i dizayn va uslublar (CSS)
+├── app.js            # API so'rovlar, savat, konsol va CRUD logikasi (Vanilla JS)
+├── logo.png          # Zim-Zim brend logotipi
+├── favicon.png       # Ilova belgisi
+└── README.md         # To'liq hujjatlar
 ```
 
 ---
 
 ## 🛠️ To'g'ridan-to'g'ri Terminal orqali Sinash (cURL)
-
-Agar terminal orqali sinab ko'rmoqchi bo'lsangiz:
 
 ```bash
 # 1. Menyu taomlarini olish (GET)
