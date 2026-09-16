@@ -150,4 +150,4 @@ curl -X POST "https://api-kafe.zim-zim.uz/api/v1/merchant/orders/1024/close" \
 
 ## 📄 Litsenziya
 
-MIT License © [Zim-Zim Foodtech](https://zim-zim.uz)
+MIT License © [Zim-Zim](https://zim-zim.uz)

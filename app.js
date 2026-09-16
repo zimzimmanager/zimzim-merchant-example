@@ -1,10 +1,13 @@
 // ============================================================================
+// Zim-Zim Merchant API — Pure Frontend JavaScript Application (No Backend)
 // Zim-Zim Merchant API — Interactive Web App & CRUD Playground (Pure Frontend)
 // ============================================================================
 
 const API_BASE_URL = "https://api-kafe.zim-zim.uz/api/v1/merchant";
 const DEFAULT_API_KEY = "demo_zimzim_sandbox_2026";
 
+let currentApiKey = localStorage.getItem("zimzim_api_key") || "";
+let currentProducts = [];
 // Load from localStorage or set default token automatically
 let currentApiKey = localStorage.getItem("zimzim_api_key");
 if (!currentApiKey) {
@@ -69,6 +72,7 @@ let lastInspectorData = {
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "X-Api-Key": currentApiKey || "<YOUR_TOKEN>",
     "X-Api-Key": currentApiKey,
   },
   requestBody: null,
@@ -141,12 +145,14 @@ function refreshIcons() {
 
 // ── Update Token Status Bar UI ──
 function updateTokenBanner() {
+  if (currentApiKey) {
   const isDemo =
     currentApiKey === DEFAULT_API_KEY || currentApiKey.startsWith("demo_");
 
   if (isDemo) {
     tokenStatusBar.className =
       "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
+    tokenStatusText.innerHTML = `🟢 <b>API Token ulangan:</b> <span class="font-mono">${currentApiKey.slice(0, 10)}••••••••</span>. So'rovlar to'g'ridan-to'g'ri Zim-Zim API ga yo'naltirilmoqda.`;
     tokenStatusText.innerHTML = `🟢 <b>Demo Token faol:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">${currentApiKey}</span> — Barcha CRUD & POS amallari to'liq ishchi holatda!`;
   } else if (currentApiKey) {
     tokenStatusBar.className =
@@ -155,10 +161,12 @@ function updateTokenBanner() {
   } else {
     tokenStatusBar.className =
       "bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
+    tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting va "Saqlash" tugmasini bosing.`;
     tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting yoki "Demo token" tugmasini bosing.`;
   }
 }
 
+// ── Direct Browser Fetch to Zim-Zim API (Pure Frontend) ──
 // ── API Call Function (Supports Real Server & Seamless Sandbox Simulation) ──
 async function callApi(method, path, body = null) {
   const startTime = Date.now();
@@ -187,11 +195,15 @@ async function callApi(method, path, body = null) {
       mode: "cors",
     });
 
+    const latency = Date.now() - startTime;
+    let data;
     resStatus = res.status;
     resStatusText = res.statusText || (res.ok ? "OK" : "Error");
     try {
+      data = await res.json();
       realData = await res.json();
     } catch {
+      data = { status: res.status, statusText: res.statusText };
       realData = null;
     }
     resOk = res.ok;
@@ -208,6 +220,8 @@ async function callApi(method, path, body = null) {
       url: path,
       headers,
       requestBody: body,
+      responseStatus: `${res.status} ${res.statusText || (res.ok ? "OK" : "Error")}`,
+      responseBody: data,
       responseStatus: `${resStatus} ${resStatusText}`,
       responseBody: realData,
       latency,
@@ -216,6 +230,22 @@ async function callApi(method, path, body = null) {
     return { ok: true, status: resStatus, data: realData };
   }
 
+    updateConsoleView();
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    const latency = Date.now() - startTime;
+    lastInspectorData = {
+      method,
+      url: path,
+      headers,
+      requestBody: body,
+      responseStatus: "Request Dispatched",
+      responseBody: {
+        note: "So'rov Zim-Zim API serveriga yuborildi.",
+        endpoint: fullUrl,
+        headersSent: headers,
+        payloadSent: body,
+        details: err.message,
   // 3. Simulated Authentic Zim-Zim Response (for Demo token & Out-of-the-box Testing)
   let simulatedData = null;
   let simulatedStatus = "200 OK";
@@ -306,7 +336,10 @@ async function callApi(method, path, body = null) {
           { id: 3, name: "Click / Payme (Online)", is_active: true },
         ],
       },
+      latency,
     };
+    updateConsoleView();
+    return { ok: false, error: err };
   } else if (path === "/places") {
     simulatedData = {
       auth: { status: "SUCCESS" },
@@ -389,6 +422,7 @@ function updateConsoleView() {
   consoleStatus.textContent = lastInspectorData.responseStatus;
   consoleLatency.textContent = `Latency: ${lastInspectorData.latency}ms`;
 
+  const isOk = lastInspectorData.responseStatus.startsWith("2");
   const isOk =
     lastInspectorData.responseStatus.startsWith("2") ||
     lastInspectorData.responseStatus.includes("OK");
@@ -496,10 +530,51 @@ async function loadProducts() {
 
   const res = await callApi("GET", "/products?limit=8&offset=0");
 
+  if (res.ok && res.data?.data && res.data.data.length > 0) {
   if (res.ok && res.data?.payload?.data) {
     currentProducts = res.data.payload.data;
   } else if (res.ok && res.data?.data) {
     currentProducts = res.data.data;
+  } else {
+    // Demo taomlar (agar API token hali kiritilmagan bo'lsa interfeys bo'sh qolmasligi uchun)
+    currentProducts = [
+      {
+        product_id: 136001,
+        name: "Zim-Zim Qiyma Shashlik",
+        price: 28000,
+        enable: true,
+      },
+      {
+        product_id: 136002,
+        name: "Jaz Mol Go'shti Shashlik",
+        price: 34000,
+        enable: true,
+      },
+      {
+        product_id: 136003,
+        name: "Zim-Zim Maxsus To'y Palovi",
+        price: 45000,
+        enable: true,
+      },
+      {
+        product_id: 136004,
+        name: "Tandir Somsa (Go'shtli)",
+        price: 14000,
+        enable: true,
+      },
+      {
+        product_id: 136005,
+        name: "Achichiq-chuchuk Salati",
+        price: 12000,
+        enable: true,
+      },
+      {
+        product_id: 136006,
+        name: "Ko'k Choy (Choynakda)",
+        price: 6000,
+        enable: true,
+      },
+    ];
   }
 
   productCountBadge.textContent = `${currentProducts.length} taom`;
@@ -516,6 +591,7 @@ function renderProductsGrid() {
       <div class="space-y-1.5">
         <div class="flex items-center justify-between">
           <span class="text-[10px] font-mono font-bold text-zinc-500">ID: #${p.product_id}</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${p.enable ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}">
           <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${
             p.enable
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
@@ -525,6 +601,7 @@ function renderProductsGrid() {
           </span>
         </div>
         <h3 class="text-sm font-bold text-white">${p.name}</h3>
+        <p class="text-xs font-mono text-red-500 dark:text-red-400 font-bold">${Number(p.price).toLocaleString()} UZS</p>
         <p class="text-xs font-mono text-red-400 font-bold">${Number(p.price).toLocaleString()} UZS</p>
       </div>
 
@@ -580,6 +657,7 @@ submitAddDishBtn.onclick = async () => {
   const newId =
     res.data?.payload?.data?.[0]?.product_id ||
     res.data?.data?.[0]?.product_id ||
+    Math.floor(100000 + Math.random() * 90000);
     Math.floor(136000 + Math.random() * 9000);
 
   currentProducts.unshift({ product_id: newId, name, price, enable: true });
@@ -590,6 +668,7 @@ submitAddDishBtn.onclick = async () => {
 // ── UPDATE DISH PRICE (PUT /products) ──
 window.editPricePrompt = async (productId, oldPrice) => {
   const newPriceStr = prompt(
+    `Yangi narxni kiriting (hozirgi: ${oldPrice} UZS):`,
     `Yangi narxni kiriting (hozirgi: ${oldPrice.toLocaleString()} UZS):`,
     oldPrice,
   );
@@ -616,6 +695,9 @@ window.editPricePrompt = async (productId, oldPrice) => {
 
 // ── DELETE DISH (DELETE /products/{id}) ──
 window.deleteProduct = async (productId) => {
+  if (
+    !confirm(`Haqiqatan ham #${productId} taomni menyudan o'chirmoqchimisiz?`)
+  )
   const product = currentProducts.find((p) => p.product_id === productId);
   const title = product ? product.name : `#${productId}`;
 
@@ -634,6 +716,7 @@ window.addToCart = (productId) => {
   const product = currentProducts.find((p) => p.product_id === productId);
   if (!product) return;
 
+  currentCart.push(product);
   currentCart.push({ ...product });
   updateCartView();
   showTab("orders");
@@ -641,6 +724,7 @@ window.addToCart = (productId) => {
 
 function updateCartView() {
   if (currentCart.length === 0) {
+    orderItemsList.innerHTML = `<div class="py-4 text-center text-zinc-500 text-xs">Savat bo'sh. Menyu bo'limidan taom qo'shing.</div>`;
     orderItemsList.innerHTML = `<div class="py-6 text-center text-zinc-500 text-xs">Savat bo'sh. Menyu (CRUD) bo'limidan taom qo'shing.</div>`;
     orderTotalAmount.textContent = "0 UZS";
     return;
@@ -651,12 +735,16 @@ function updateCartView() {
   currentCart.forEach((item, index) => {
     total += item.price;
     const row = document.createElement("div");
+    row.className = "py-2 flex justify-between items-center text-zinc-300";
     row.className =
       "py-2 flex justify-between items-center text-zinc-300 text-xs";
     row.innerHTML = `
+      <span class="font-medium">${item.name}</span>
+      <div class="flex items-center gap-2">
       <span class="font-medium truncate mr-2">${item.name}</span>
       <div class="flex items-center gap-2 shrink-0">
         <span class="font-mono text-white font-semibold">${Number(item.price).toLocaleString()} UZS</span>
+        <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-0.5">
         <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-0.5 transition-colors" title="O'chirish">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
@@ -705,6 +793,7 @@ createOrderBtn.onclick = async () => {
   const orderId =
     res.data?.payload?.data?.order_id ||
     res.data?.data?.order_id ||
+    res.data?.data?.id ||
     Math.floor(1000 + Math.random() * 9000);
 
   currentActiveOrderId = orderId;
@@ -723,6 +812,7 @@ closeOrderBtn.onclick = async () => {
   closeOrderBtn.disabled = true;
   closeOrderBtn.textContent = "To'lov yopilmoqda...";
 
+  const total = currentCart.reduce((sum, item) => sum + item.price, 0) || 48000;
   const total = currentCart.reduce((sum, item) => sum + item.price, 0) || 54000;
   const payload = {
     payment_type_id: paymentTypeId,
@@ -744,6 +834,7 @@ closeOrderBtn.onclick = async () => {
 
 // ── DICTIONARIES ──
 window.fetchDictionary = async (dictType) => {
+  await callApi("GET", `/${dictType}`);
   const res = await callApi("GET", `/${dictType}`);
   if (res.ok && dictDisplayBox) {
     dictDisplayBox.classList.remove("hidden");
@@ -803,10 +894,14 @@ closeAddDishModalBtn.onclick = cancelAddDishBtn.onclick = () => {
 };
 
 // ── API KEY CONFIG ──
+if (currentApiKey) {
+  apiKeyInput.value = currentApiKey;
+}
 apiKeyInput.value = currentApiKey;
 updateTokenBanner();
 
 saveKeyBtn.onclick = () => {
+  currentApiKey = apiKeyInput.value.trim();
   currentApiKey = apiKeyInput.value.trim() || DEFAULT_API_KEY;
   localStorage.setItem("zimzim_api_key", currentApiKey);
   apiKeyInput.value = currentApiKey;
@@ -817,6 +912,7 @@ saveKeyBtn.onclick = () => {
   setTimeout(() => {
     saveKeyBtn.textContent = "Saqlash";
     saveKeyBtn.className =
+      "px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-all shrink-0";
       "px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-md shadow-red-600/20 transition-all shrink-0";
   }, 1500);
   loadProducts();
