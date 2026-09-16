@@ -36,7 +36,9 @@ Siz ushbu ilovaga o'z tashkilotingizning `X-Api-Key` maxfiy tokenini kiritib, to
 Loyiha faqatgina toza **HTML5**, **CSS3** va **Vanilla JavaScript**dan iborat. Hech qanday `npm install`, Node.js yoki backend o'rnatish shart emas!
 
 ### 1-usul: Brauzerda to'g'ridan-to'g'ri ochish (Eng oson)
+
 Repozitoriyni yuklab oling va shunchaki `index.html` faylini istalgan brauzerda (Chrome, Safari, Firefox, Edge) oching:
+
 ```bash
 git clone https://github.com/zimzimmanager/zimzim-merchant-example.git
 cd zimzim-merchant-example
@@ -52,7 +54,9 @@ xdg-open index.html
 ```
 
 ### 2-usul: Statik web server orqali ochish (Tavsiya etiladi)
+
 Agar sizda Python yoki VS Code mavjud bo'lsa:
+
 ```bash
 # Python 3:
 python3 -m http.server 3030
@@ -62,13 +66,13 @@ python3 -m http.server 3030
 
 ---
 
-## 🔑 API Tokenni Qo'yish va Ishlatish
+## 🔑 API Token va Default Demo Rejim
 
-1. Ekranning yuqori o'ng burchagidagi qutiga **`X-Api-Key`** maxfiy tokeningizni kiriting.
-2. **"Saqlash"** tugmasini bosing — token xavfsiz tarzda brauzeringizning `localStorage` xotirasida saqlanadi.
-3. Yuqoridagi holat paneli yashil rangga kiradi: `🟢 API Token ulangan`.
-4. **"GET /products"** tugmasini bosing — o'z tashkilotingiz menyusidagi barcha taomlar bir zumda ekranda kartalar ko'rinishida paydo bo'ladi!
-5. O'ng tarafdagi konsolda har bir yuborilgan so'rovning to'liq JSON javobi va cURL kodi ko'rinib turadi.
+- **🚀 Tezkor Sinov (Out of the box):** Sahifani birinchi marta ochishingiz bilanoq avtomatik tarzda `demo_zimzim_sandbox_2026` default tokeni `localStorage`ga saqlanadi. Hech qanday qo'shimcha sozlamsiz, to'g'ridan-to'g'ri taom qo'shish, narx tahrirlash, o'chirish va buyurtma berishni sinab ko'rishingiz mumkin!
+- **🏢 O'z Tashkilotingiz Tokenini Ulash:**
+  1. Ekranning yuqori o'ng burchagidagi qutiga o'z **`X-Api-Key`** maxfiy tokeningizni kiriting.
+  2. **"Saqlash"** tugmasini bosing — token `localStorage`da saqlanadi va serverga to'g'ridan-to'g'ri so'rov yuboriladi.
+  3. Xohlagan paytda **"Demo token"** tugmasini bosib, qaytadan sandbox rejimiga o'tishingiz mumkin.
 
 ---
 
