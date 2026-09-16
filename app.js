@@ -5,14 +5,14 @@
 const API_BASE_URL = "https://api-kafe.zim-zim.uz/api/v1/merchant";
 const DEFAULT_API_KEY = "demo_zimzim_sandbox_2026";
 
-// LocalStorage orqali tokenni tekshirish yoki avtomatik standart token o'rnatish
+// // LocalStorage orqali tokenni tekshirish yoki avtomatik standart token o'rnatish
 let currentApiKey = localStorage.getItem("zimzim_api_key");
 if (!currentApiKey) {
   currentApiKey = DEFAULT_API_KEY;
   localStorage.setItem("zimzim_api_key", currentApiKey);
 }
 
-// Boshlang'ich demo taomlar ro'yxati (Sandbox / Offline holatlar uchun)
+// Boshlang'ich demo taomlar ro'yxati (Faqat Offline / Standart demo token holatlari uchun)
 const INITIAL_PRODUCTS = [
   {
     product_id: 136001,
@@ -151,25 +151,25 @@ function refreshIcons() {
   }
 }
 
-// ── Xabarnomalar (Toasts) Chiqarish ──
+// ── Bildirishnoma (Toast) ──
 function showToast(message, type = "success") {
   if (!toastContainer) return;
   const toast = document.createElement("div");
-  const isSuccess = type === "success";
-
-  toast.className = `p-3.5 rounded-2xl border shadow-2xl flex items-start gap-2.5 text-xs font-medium animate-fade-in transition-all ${
-    isSuccess
-      ? "bg-white/95 dark:bg-zinc-900/95 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-emerald-950/40"
-      : "bg-white/95 dark:bg-zinc-900/95 border-red-500/40 text-red-700 dark:text-red-300 shadow-red-950/40"
+  const isError = type === "error";
+  toast.className = `p-3 rounded-xl shadow-xl flex items-start gap-2.5 text-xs border animate-in fade-in slide-in-from-bottom-2 duration-200 transition-all ${
+    isError
+      ? "bg-red-950/90 dark:bg-red-950/90 text-red-200 border-red-800 shadow-red-900/30"
+      : "bg-zinc-900 dark:bg-zinc-900 text-white border-zinc-700 shadow-black/40"
   }`;
-
   toast.innerHTML = `
-    <i data-lucide="${isSuccess ? "check-circle-2" : "alert-triangle"}" class="w-4 h-4 shrink-0 mt-0.5"></i>
-    <div class="flex-1 leading-snug">${message}</div>
+    <i data-lucide="${isError ? "alert-circle" : "check-circle-2"}" class="w-4 h-4 ${
+      isError ? "text-red-400" : "text-emerald-400"
+    } shrink-0 mt-0.5"></i>
+    <div class="flex-1 leading-relaxed">${message}</div>
   `;
-
   toastContainer.appendChild(toast);
   refreshIcons();
+
   setTimeout(() => {
     toast.style.opacity = "0";
     toast.style.transform = "translateY(10px)";
@@ -177,48 +177,67 @@ function showToast(message, type = "success") {
   }, 4000);
 }
 
-// ── Token Statusini Yangilash ──
+// ── Token Holatini Yangilash ──
 function updateTokenBanner() {
-  const isDemo =
-    !currentApiKey ||
-    currentApiKey === DEFAULT_API_KEY ||
-    currentApiKey.startsWith("demo_");
+  // Inputdagi tokenni tekshirish
+  const inputVal = apiKeyInput ? apiKeyInput.value.trim() : "";
+  const token = inputVal || currentApiKey;
+  const isReal =
+    Boolean(token) &&
+    token !== DEFAULT_API_KEY &&
+    !token.startsWith("demo_");
 
-  if (isDemo) {
+  if (isReal) {
     tokenStatusBar.className =
-      "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `<b>Demo Sandbox Rejimi:</b> <span class="font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey}</span> — Barcha amallarni bemalol bosib sinab ko'rishingiz mumkin!`;
-  } else if (currentApiKey) {
-    tokenStatusBar.className =
-      "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    const orgLabel = currentOrgName ? `<b>${currentOrgName}</b> — ` : "";
-    tokenStatusText.innerHTML = `<b>Jonli Server Ulangan:</b> ${orgLabel}<span class="font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey.slice(0, 10)}••••••••</span> — So'rovlar to'g'ridan-to'g'ri haqiqiy serverga yuborilmoqda.`;
+      "px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5";
+    const orgLabel = currentOrgName ? ` • ${currentOrgName}` : "";
+    tokenStatusBar.innerHTML = `
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span>JONLI SINOV REJIMI (REAL API)${orgLabel}</span>
+    `;
+    if (tokenStatusText) {
+      tokenStatusText.textContent = `Haqiqiy serverga ulangan (${token.slice(0, 8)}...)${orgLabel}. Mock ma'lumotlar o'chirilgan.`;
+    }
   } else {
     tokenStatusBar.className =
-      "bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `<b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting yoki "Demo token" tugmasini bosing.`;
+      "px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5";
+    tokenStatusBar.innerHTML = `
+      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+      <span>DEMO SANDBOX REJIMI</span>
+    `;
+    if (tokenStatusText) {
+      tokenStatusText.textContent =
+        "Standart demo token faol. Haqiqiy do'koningizni sinash uchun yuqoriga o'z API tokeringizni kiriting.";
+    }
   }
 }
 
-// ── Haqiqiy API So'rov Funktsiyasi (Real Server + Aniq Xatolar + Demo Fallback) ──
+// ── Haqiqiy API So'rov Funktsiyasi (Real Server + Aniq Xatolar + Qat'iy Mock Tekshiruvi) ──
 async function callApi(method, path, body = null) {
   const startTime = Date.now();
   const fullUrl = `${API_BASE_URL}${path}`;
-  const isDemo =
-    !currentApiKey ||
-    currentApiKey === DEFAULT_API_KEY ||
-    currentApiKey.startsWith("demo_");
+
+  // Eng so'nggi tokenni olish: agar inputda boshqa token yozilgan bo'lsa, uni darhol ishlatish
+  const inputToken = apiKeyInput ? apiKeyInput.value.trim() : "";
+  const activeKey = inputToken || currentApiKey || DEFAULT_API_KEY;
+  currentApiKey = activeKey;
+
+  const isRealToken = Boolean(
+    activeKey &&
+    activeKey !== DEFAULT_API_KEY &&
+    !activeKey.startsWith("demo_")
+  );
 
   const headers = {
     "Content-Type": "application/json",
     Accept: "application/json",
   };
 
-  if (currentApiKey) {
-    headers["X-Api-Key"] = currentApiKey;
+  if (activeKey) {
+    headers["X-Api-Key"] = activeKey;
   }
 
-  // 1. Haqiqiy serverga so'rov jo'natishga urinish
+  // 1. Haqiqiy serverga so'rov jo'natish
   let resOk = false;
   let resStatus = 200;
   let resStatusText = "OK";
@@ -246,13 +265,13 @@ async function callApi(method, path, body = null) {
     fetchError = err.message || "Tarmoq yoki CORS xatosi";
   }
 
-  // MUHIM: HTTP darajasida 200/201 (resOk) kelsa ham, javob "konvertida"
-  // (auth.status yoki payload.status) "ERROR" bo'lishi mumkin. Zim-Zim API
-  // ba'zi ichki xatolarni ham 2xx status bilan qaytaradi — shuning uchun
-  // konvert ichidagi statusni ham albatta tekshirib, xato sifatida hisoblaymiz.
+  // MUHIM: HTTP 200/201 kelsa ham, javob "konvertida"
+  // (auth.status yoki payload.status) "ERROR" bo'lishi mumkin.
   const appStatus = realData?.payload?.status || realData?.auth?.status;
   const hasAppError = Boolean(
-    appStatus === "ERROR" || realData?.payload?.error || realData?.auth?.error,
+    appStatus === "ERROR" ||
+    realData?.payload?.error ||
+    realData?.auth?.error
   );
   if (resOk && hasAppError) {
     resOk = false;
@@ -260,20 +279,22 @@ async function callApi(method, path, body = null) {
 
   const latency = Math.max(16, Date.now() - startTime);
 
-  // Tashkilot nomini saqlab qolish
+  // Tashkilot nomini yangilash
   if (realData?.auth?.organization_name) {
     currentOrgName = realData.auth.organization_name;
     updateTokenBanner();
   }
 
-  // Agar REAL token bo'lsa (isDemo === false):
-  // Xatolik bo'lsa ham hech qachon soxta ma'lumot bilan yashirilmaydi!
-  // Serverdan nima kelgan bo'lsa, konsolda aynan shu ko'rsatiladi.
-  if (!isDemo) {
+  // ═════════════════════════════════════════════════════════════════════════════
+  // QAT'IY QOIDA: Agar REAL token bo'lsa (isRealToken === true):
+  // MOCK DATALAR UMUMAN ISHLAMASIN! Server xatosi bo'lsa ham aynan server javobi
+  // qizil rangda, aniq xato kodi va xabari bilan to'g'ridan-to'g'ri ko'rsatilsin!
+  // ═════════════════════════════════════════════════════════════════════════════
+  if (isRealToken) {
     const statusString = realData
       ? `${resStatus} ${resStatusText}`
       : fetchError
-        ? `ERR: ${fetchError}`
+        ? `CORS / Network Error`
         : `${resStatus} ${resStatusText}`;
 
     const responseBody = realData || {
@@ -298,16 +319,23 @@ async function callApi(method, path, body = null) {
       const errMsg =
         realData?.payload?.error?.message ||
         realData?.auth?.error?.message ||
+        realData?.error?.message ||
         realData?.message ||
         (typeof realData?.error === "string" ? realData.error : null) ||
         fetchError ||
         `Server xatosi (HTTP ${resStatus})`;
-      showToast(`Server xatosi: ${errMsg}`, "error");
-      return { ok: false, status: resStatus, error: errMsg, data: realData };
+
+      const errCode =
+        realData?.payload?.error?.code ||
+        realData?.auth?.error?.code ||
+        "ERROR";
+
+      showToast(`Server xatosi [${errCode}]: ${errMsg}`, "error");
+      return { ok: false, status: resStatus, error: errMsg, code: errCode, data: realData };
     }
   }
 
-  // 2. Demo rejimida haqiqiy server 200 qaytarsa:
+  // 2. Demo rejimida haqiqiy server muvaffaqiyatli javob qaytarsa:
   if (resOk && realData) {
     lastInspectorData = {
       method,
@@ -322,7 +350,28 @@ async function callApi(method, path, body = null) {
     return { ok: true, status: resStatus, data: realData };
   }
 
-  // 3. Demo / Sandbox simulyatsiyasi (Zim-Zim API spetsifikatsiyasiga to'liq mos)
+  // 3. Demo rejimida serverdan xato kelsa (faqat demo token bo'lganda):
+  // Agar serverdan xato javobi kelgan bo'lsa, konsolda aynan shu xato ko'rsatiladi
+  if (realData && !resOk) {
+    lastInspectorData = {
+      method,
+      url: path,
+      headers,
+      requestBody: body,
+      responseStatus: `${resStatus} ${resStatusText}`,
+      responseBody: realData,
+      latency,
+    };
+    updateConsoleView();
+    const errMsg =
+      realData?.payload?.error?.message ||
+      realData?.auth?.error?.message ||
+      `Server xatosi (HTTP ${resStatus})`;
+    showToast(`Server xatosi: ${errMsg}`, "error");
+    return { ok: false, status: resStatus, error: errMsg, data: realData };
+  }
+
+  // 4. Faqat Tarmoq xatosi bo'lganda va Demo token bo'lgandagina Sandbox Mock Fallback:
   let simulatedData = null;
   let simulatedStatus = "200 OK";
 
@@ -679,10 +728,20 @@ async function loadProducts() {
     // Faqat taomlarni (kategoriyalarni emas) ajratib olish
     const dishes = rawItems.filter((p) => !p.is_category);
     currentProducts = dishes.length > 0 ? dishes : rawItems;
+    productCountBadge.textContent = `${currentProducts.length} taom`;
+    renderProductsGrid();
+  } else {
+    currentProducts = [];
+    productCountBadge.textContent = "Xatolik";
+    productsGrid.innerHTML = `
+      <div class="col-span-2 py-12 text-center text-red-500 text-xs flex flex-col items-center gap-2">
+        <i data-lucide="alert-circle" class="w-8 h-8 text-red-500"></i>
+        <span class="font-bold">Serverdan taomlarni yuklab bo'lmadi</span>
+        <span class="text-[11px] text-zinc-400 max-w-md">${res.error || "Server xatosi"}</span>
+      </div>
+    `;
+    refreshIcons();
   }
-
-  productCountBadge.textContent = `${currentProducts.length} taom`;
-  renderProductsGrid();
 }
 
 function renderProductsGrid() {
@@ -1056,6 +1115,11 @@ createOrderBtn.onclick = async () => {
     return;
   }
 
+  if (currentCart.length === 0) {
+    showToast("Buyurtma yuborish uchun avval savatga kamida bitta taom qo'shing!", "error");
+    return;
+  }
+
   const orderType = orderTypeSelect?.value || "takeaway";
   const clientPhone = orderPhoneInput?.value.trim() || "+998901234567";
 
@@ -1085,8 +1149,7 @@ createOrderBtn.onclick = async () => {
     const orderId =
       res.data?.payload?.data?.order_id ||
       res.data?.data?.order_id ||
-      res.data?.order_id ||
-      Math.floor(1000 + Math.random() * 9000);
+      res.data?.order_id;
     const totalAmount =
       res.data?.payload?.data?.price ||
       res.data?.data?.price ||
@@ -1102,6 +1165,9 @@ createOrderBtn.onclick = async () => {
     showToast(
       `<b>Yangi Buyurtma #${orderId} ochildi!</b> Oshxonaga qabul qilindi. Endi to'lov bilan yopishingiz mumkin.`,
     );
+  } else {
+    activeOrderBox.classList.add("hidden");
+    currentActiveOrderId = null;
   }
 };
 
@@ -1222,6 +1288,16 @@ closeAddDishModalBtn.onclick = cancelAddDishBtn.onclick = () => {
 // ── TOKEN SOZLAMALARI ──
 apiKeyInput.value = currentApiKey;
 updateTokenBanner();
+
+// Token kiritilishi yoki paste qilinishi bilan darhol aktivlashtirish
+apiKeyInput.addEventListener("input", () => {
+  const val = apiKeyInput.value.trim();
+  if (val) {
+    currentApiKey = val;
+    localStorage.setItem("zimzim_api_key", currentApiKey);
+    updateTokenBanner();
+  }
+});
 
 saveKeyBtn.onclick = () => {
   currentApiKey = apiKeyInput.value.trim() || DEFAULT_API_KEY;
