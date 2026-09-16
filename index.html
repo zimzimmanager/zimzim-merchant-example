@@ -1,6 +1,14 @@
 <!doctype html>
-<html lang="uz" class="dark">
+<html lang="uz">
   <head>
+    <script>
+      (function () {
+        var saved = localStorage.getItem("zimzim_theme");
+        if (saved === "dark") {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zim-Zim Merchant API — Oddiy va Tushunarli Boshqaruv Paneli</title>
@@ -29,26 +37,26 @@
     </script>
   </head>
   <body
-    class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-red-600 selection:text-white"
+    class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-red-600 selection:text-white"
   >
     <!-- TOP NAVBAR -->
     <header
-      class="sticky top-0 z-40 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800 px-4 sm:px-6 py-3 flex items-center justify-between gap-4"
+      class="sticky top-0 z-40 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 py-3 flex items-center justify-between gap-4"
     >
       <div class="flex items-center gap-3">
         <img src="logo.png" alt="Zim-Zim" class="h-8 object-contain" />
         <div class="hidden sm:block">
           <div class="flex items-center gap-2">
-            <span class="font-bold text-sm text-white"
+            <span class="font-bold text-sm text-zinc-900 dark:text-white"
               >Merchant API Playground</span
             >
             <span
-              class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
             >
               JONLI SINOV REJIMI
             </span>
           </div>
-          <p class="text-[11px] text-zinc-400">
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
             Restoran kassa va menyu boshqaruvi
           </p>
         </div>
@@ -61,11 +69,11 @@
             type="password"
             id="apiKeyInput"
             placeholder="X-Api-Key maxfiy tokeni..."
-            class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs font-mono text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-red-500 transition-colors pr-8 shadow-inner"
+            class="w-full bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-xs font-mono text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-red-500 transition-colors pr-8 shadow-inner"
           />
           <button
             id="toggleKeyVisibility"
-            class="absolute right-2.5 top-2 text-zinc-400 hover:text-white"
+            class="absolute right-2.5 top-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             title="Ko'rsatish/Yashirish"
           >
             <i data-lucide="eye" class="w-3.5 h-3.5"></i>
@@ -81,16 +89,25 @@
 
         <button
           id="resetDemoKeyBtn"
-          class="hidden sm:inline-flex px-2.5 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-medium transition-all shrink-0"
+          class="hidden sm:inline-flex px-2.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white text-xs font-medium transition-all shrink-0"
           title="Standart sinov tokenini tiklash"
         >
           Demo token
         </button>
 
+        <button
+          id="themeToggleBtn"
+          class="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-all shrink-0"
+          title="Yorug' / Qorong'u rejim"
+        >
+          <i data-lucide="sun" class="w-4 h-4 dark:hidden"></i>
+          <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+        </button>
+
         <a
           href="https://github.com/zimzimmanager/zimzim-merchant-example"
           target="_blank"
-          class="p-2 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all shrink-0"
+          class="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-all shrink-0"
           title="GitHub Repozitoriy"
         >
           <i data-lucide="git-branch" class="w-4 h-4"></i>
@@ -103,19 +120,19 @@
       id="tokenStatusBar"
       class="bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs"
     >
-      <div class="flex items-center gap-2 text-emerald-400">
+      <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
         <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
         <span id="tokenStatusText"></span>
       </div>
       <div
-        class="flex items-center gap-3 text-[11px] font-mono text-zinc-400 hidden md:flex"
+        class="flex items-center gap-3 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 hidden md:flex"
       >
         <span
           >Server:
-          <b class="text-zinc-300">https://api-kafe.zim-zim.uz</b></span
+          <b class="text-zinc-600 dark:text-zinc-300">https://api-kafe.zim-zim.uz</b></span
         >
-        <span class="text-zinc-600">|</span>
-        <span>Autentifikatsiya: <b class="text-zinc-300">X-Api-Key</b></span>
+        <span class="text-zinc-500 dark:text-zinc-600">|</span>
+        <span>Autentifikatsiya: <b class="text-zinc-600 dark:text-zinc-300">X-Api-Key</b></span>
       </div>
     </div>
 
@@ -123,27 +140,27 @@
     <main class="flex-1 max-w-[1540px] w-full mx-auto p-4 sm:p-6 space-y-6">
       <!-- SODDA VA IXCHAM TEZKOR SINOV PANELI -->
       <div
-        class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-md"
+        class="bg-white/90 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-md"
       >
         <div class="flex items-center gap-2.5">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-xs font-bold text-white">Tezkor sinash:</span>
-          <span class="text-xs text-zinc-400 hidden md:inline">Bitta bosishda real API amallarini ko'ring:</span>
+          <span class="text-xs font-bold text-zinc-900 dark:text-white">Tezkor sinash:</span>
+          <span class="text-xs text-zinc-500 dark:text-zinc-400 hidden md:inline">Bitta bosishda real API amallarini ko'ring:</span>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
           <button
             onclick="quickTest('create')"
-            class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-zinc-700 transition-all"
+            class="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95 text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-zinc-300 dark:border-zinc-700 transition-all"
           >
-            <i data-lucide="plus" class="w-3.5 h-3.5 text-red-400"></i>
+            <i data-lucide="plus" class="w-3.5 h-3.5 text-red-600 dark:text-red-400"></i>
             <span>Taom qo'shish</span>
           </button>
           <button
             onclick="quickTest('update')"
-            class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-zinc-700 transition-all"
+            class="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95 text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-zinc-300 dark:border-zinc-700 transition-all"
           >
-            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-blue-400"></i>
+            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i>
             <span>Narx yangilash</span>
           </button>
           <button
@@ -162,25 +179,25 @@
         <div class="lg:col-span-7 space-y-5">
           <!-- Navigation Tabs (With Clear Subtitles) -->
           <div
-            class="flex items-center gap-2 p-1.5 bg-zinc-900 border border-zinc-800 rounded-2xl"
+            class="flex items-center gap-2 p-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl"
           >
             <button
               id="tabProductsBtn"
-              class="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2"
+              class="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm flex items-center justify-center gap-2"
             >
               <i data-lucide="utensils" class="w-4 h-4 text-red-500"></i>
               <span>1. Taomlar & Menyu (CRUD)</span>
             </button>
             <button
               id="tabOrdersBtn"
-              class="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-400 hover:text-white flex items-center justify-center gap-2"
+              class="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center gap-2"
             >
               <i data-lucide="shopping-bag" class="w-4 h-4 text-red-500"></i>
               <span>2. Kassa & Buyurtma (POS)</span>
             </button>
             <button
               id="tabDictsBtn"
-              class="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-400 hover:text-white flex items-center justify-center gap-2"
+              class="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center gap-2"
             >
               <i data-lucide="database" class="w-4 h-4 text-red-500"></i>
               <span>3. Ma'lumotnomalar</span>
@@ -190,21 +207,21 @@
           <!-- ════════════ TAB 1: PRODUCTS (CRUD) ════════════ -->
           <div id="tabProducts" class="space-y-4">
             <div
-              class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 flex flex-wrap items-center justify-between gap-3"
+              class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 flex flex-wrap items-center justify-between gap-3"
             >
               <div>
                 <h3
-                  class="text-sm sm:text-base font-bold text-white flex items-center gap-2"
+                  class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2"
                 >
                   <span>Restoran Menyusi</span>
                   <span
                     id="productCountBadge"
-                    class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-semibold border border-zinc-700"
+                    class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-semibold border border-zinc-300 dark:border-zinc-700"
                   >
                     6 taom
                   </span>
                 </h3>
-                <p class="text-xs text-zinc-400 mt-0.5">
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                   Har bir taomni savatga qo'shish, narxini o'zgartirish yoki
                   yangi taom kiritish mumkin.
                 </p>
@@ -212,7 +229,7 @@
               <div class="flex items-center gap-2">
                 <button
                   id="refreshProductsBtn"
-                  class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition-colors"
+                  class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-medium text-zinc-600 dark:text-zinc-300 transition-colors"
                   title="Serverdan taomlar ro'yxatini qayta yuklash"
                 >
                   <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
@@ -239,11 +256,11 @@
 
           <!-- ════════════ TAB 2: ORDERS (POS FLOW) ════════════ -->
           <div id="tabOrders" class="space-y-4 hidden">
-            <div class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60">
-              <h3 class="text-sm sm:text-base font-bold text-white">
+            <div class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60">
+              <h3 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
                 Kassa Oqimi (POS Checkout)
               </h3>
-              <p class="text-xs text-zinc-400 mt-0.5">
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                 Stolni tanlang, taomlarni savatga yig'ing va kassa orqali
                 buyurtmani rasmiylashtirib to'lov bilan yoping.
               </p>
@@ -252,13 +269,13 @@
             <div class="grid sm:grid-cols-2 gap-4">
               <!-- Step 1: Table & Guests -->
               <div
-                class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 space-y-3"
+                class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 space-y-3"
               >
                 <div
-                  class="flex items-center justify-between pb-2 border-b border-zinc-800"
+                  class="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800"
                 >
                   <h4
-                    class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"
+                    class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2"
                   >
                     <span
                       class="w-5 h-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center font-bold"
@@ -266,33 +283,33 @@
                     >
                     <span>Buyurtma parametri</span>
                   </h4>
-                  <span class="text-[10px] text-zinc-500 font-mono"
+                  <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono"
                     >POST /orders</span
                   >
                 </div>
                 <div class="space-y-3 text-xs">
                   <div>
-                    <label class="block text-zinc-400 mb-1 font-medium"
+                    <label class="block text-zinc-500 dark:text-zinc-400 mb-1 font-medium"
                       >Xizmat turi (type):</label
                     >
                     <select
                       id="orderTypeSelect"
-                      class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-red-500 font-medium"
+                      class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-700 dark:text-zinc-200 focus:outline-none focus:border-red-500 font-medium"
                     >
-                      <option value="takeaway" selected>🛍️ Olib ketish / Kassa (takeaway — Stol talab qilinmaydi)</option>
-                      <option value="table">🍽️ Stolda xizmat ko'rsatish (table)</option>
-                      <option value="delivery">🚗 Yetkazib berish (delivery)</option>
+                      <option value="takeaway" selected>Olib ketish / Kassa (takeaway — Stol talab qilinmaydi)</option>
+                      <option value="table">Stolda xizmat ko'rsatish (table)</option>
+                      <option value="delivery">Yetkazib berish (delivery)</option>
                     </select>
                   </div>
 
                   <div id="tableFieldsGroup" class="space-y-3 hidden">
                     <div>
-                      <label class="block text-zinc-400 mb-1 font-medium"
+                      <label class="block text-zinc-500 dark:text-zinc-400 mb-1 font-medium"
                         >Stol (table_id):</label
                       >
                       <select
                         id="orderTableSelect"
-                        class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 font-mono focus:outline-none focus:border-red-500"
+                        class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-700 dark:text-zinc-200 font-mono focus:outline-none focus:border-red-500"
                       >
                         <option value="1">Stol #1 (ID: 1)</option>
                         <option value="2">Stol #2 (ID: 2)</option>
@@ -301,7 +318,7 @@
                     </div>
 
                     <div>
-                      <label class="block text-zinc-400 mb-1 font-medium"
+                      <label class="block text-zinc-500 dark:text-zinc-400 mb-1 font-medium"
                         >Mehmonlar Soni (guests):</label
                       >
                       <input
@@ -309,20 +326,20 @@
                         id="orderGuestsInput"
                         value="2"
                         min="1"
-                        class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 font-mono focus:outline-none focus:border-red-500"
+                        class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-700 dark:text-zinc-200 font-mono focus:outline-none focus:border-red-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label class="block text-zinc-400 mb-1 font-medium"
+                    <label class="block text-zinc-500 dark:text-zinc-400 mb-1 font-medium"
                       >Mijoz telefoni (client_phone):</label
                     >
                     <input
                       type="text"
                       id="orderPhoneInput"
                       value="+998901234567"
-                      class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-200 font-mono focus:outline-none focus:border-red-500"
+                      class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-700 dark:text-zinc-200 font-mono focus:outline-none focus:border-red-500"
                     />
                   </div>
                 </div>
@@ -330,14 +347,14 @@
 
               <!-- Step 2: Selected Items (Cart) -->
               <div
-                class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 flex flex-col justify-between space-y-3"
+                class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 flex flex-col justify-between space-y-3"
               >
                 <div>
                   <div
-                    class="flex items-center justify-between pb-2 border-b border-zinc-800"
+                    class="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800"
                   >
                     <h4
-                      class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"
+                      class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2"
                     >
                       <span
                         class="w-5 h-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center font-bold"
@@ -347,7 +364,7 @@
                     </h4>
                     <button
                       onclick="showTab('products')"
-                      class="text-[11px] text-red-400 hover:text-red-300 font-semibold flex items-center gap-1"
+                      class="text-[11px] text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold flex items-center gap-1"
                     >
                       <i data-lucide="plus" class="w-3 h-3"></i>
                       <span>Taom qo'shish</span>
@@ -355,18 +372,18 @@
                   </div>
                   <div
                     id="orderItemsList"
-                    class="divide-y divide-zinc-800/80 my-2 text-xs max-h-[170px] overflow-y-auto pr-1"
+                    class="divide-y divide-zinc-200/80 dark:divide-zinc-800/80 my-2 text-xs max-h-[170px] overflow-y-auto pr-1"
                   >
                     <!-- Dynamic Cart items -->
                   </div>
                 </div>
 
-                <div class="pt-2 border-t border-zinc-800 space-y-2.5">
+                <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
                   <div class="flex justify-between items-center text-xs">
-                    <span class="text-zinc-400 font-medium">Jami hisob:</span>
+                    <span class="text-zinc-500 dark:text-zinc-400 font-medium">Jami hisob:</span>
                     <span
                       id="orderTotalAmount"
-                      class="font-mono text-red-400 font-bold text-base"
+                      class="font-mono text-red-600 dark:text-red-400 font-bold text-base"
                       >0 UZS</span
                     >
                   </div>
@@ -384,32 +401,32 @@
             <!-- Step 3: Active Order Status & Payment -->
             <div
               id="activeOrderBox"
-              class="hidden p-4 sm:p-5 rounded-2xl border border-emerald-500/40 bg-emerald-950/20 space-y-3"
+              class="hidden p-4 sm:p-5 rounded-2xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/20 space-y-3"
             >
               <div class="flex items-center justify-between text-xs">
                 <div class="flex items-center gap-2">
                   <div
-                    class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs"
+                    class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs"
                   >
-                    ✓
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
                   </div>
-                  <span class="text-emerald-300 font-bold text-sm">
+                  <span class="text-emerald-700 dark:text-emerald-300 font-bold text-sm">
                     Yangi Buyurtma Oshxonaga Qabul Qilindi! ID:
                     <span
                       id="activeOrderId"
-                      class="font-mono text-white text-base underline"
+                      class="font-mono text-zinc-900 dark:text-white text-base underline"
                       >#1024</span
                     >
                   </span>
                 </div>
                 <span
-                  class="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-bold border border-emerald-500/30"
+                  class="text-[10px] font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full font-bold border border-emerald-500/30"
                 >
                   HOLATI: OCHIQ (KASSA KUTILMOQDA)
                 </span>
               </div>
 
-              <p class="text-xs text-zinc-300">
+              <p class="text-xs text-zinc-600 dark:text-zinc-300">
                 Buyurtma cheki ochildi. Endi to'lov turini tanlab buyurtmani
                 to'liq yopishingiz mumkin:
               </p>
@@ -418,11 +435,11 @@
                 <div class="w-full sm:w-auto flex-1 min-w-[200px]">
                   <select
                     id="paymentTypeSelect"
-                    class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 font-medium"
+                    class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-700 dark:text-zinc-200 focus:outline-none focus:border-emerald-500 font-medium"
                   >
-                    <option value="1">💵 Naqd pul (ID: 1)</option>
-                    <option value="2">💳 Uzcard / Humo Terminal (ID: 2)</option>
-                    <option value="3">📲 Click / Payme Online (ID: 3)</option>
+                    <option value="1">Naqd pul (ID: 1)</option>
+                    <option value="2">Uzcard / Humo Terminal (ID: 2)</option>
+                    <option value="3">Click / Payme Online (ID: 3)</option>
                   </select>
                 </div>
                 <button
@@ -438,11 +455,11 @@
 
           <!-- ════════════ TAB 3: DICTIONARIES ════════════ -->
           <div id="tabDicts" class="space-y-4 hidden">
-            <div class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60">
-              <h3 class="text-sm sm:text-base font-bold text-white">
+            <div class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60">
+              <h3 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
                 Tizim Ma'lumotnomalari (Dictionaries)
               </h3>
-              <p class="text-xs text-zinc-400 mt-0.5">
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                 Restoraningizdagi faol to'lov turlari, zallar, stollar va
                 o'lchov birliklarini bitta bosish bilan yuklang.
               </p>
@@ -451,104 +468,104 @@
             <div class="grid sm:grid-cols-2 gap-3.5">
               <button
                 onclick="fetchDictionary('payment-types')"
-                class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-900 text-left transition-all group"
+                class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-left transition-all group"
               >
                 <div class="flex items-center justify-between mb-2">
                   <span
-                    class="text-xs font-bold text-white group-hover:text-red-400 transition-colors"
-                    >💳 To'lov Turlari</span
+                    class="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors"
+                    >To'lov Turlari</span
                   >
                   <span
-                    class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
+                    class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
                     >GET</span
                   >
                 </div>
-                <p class="text-xs text-zinc-400 font-mono">/payment-types</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/payment-types</p>
               </button>
 
               <button
                 onclick="fetchDictionary('places')"
-                class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-900 text-left transition-all group"
+                class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-left transition-all group"
               >
                 <div class="flex items-center justify-between mb-2">
                   <span
-                    class="text-xs font-bold text-white group-hover:text-red-400 transition-colors"
-                    >🏛️ Restoran Zallari</span
+                    class="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors"
+                    >Restoran Zallari</span
                   >
                   <span
-                    class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
+                    class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
                     >GET</span
                   >
                 </div>
-                <p class="text-xs text-zinc-400 font-mono">/places</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/places</p>
               </button>
 
               <button
                 onclick="fetchDictionary('tables')"
-                class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-900 text-left transition-all group"
+                class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-left transition-all group"
               >
                 <div class="flex items-center justify-between mb-2">
                   <span
-                    class="text-xs font-bold text-white group-hover:text-red-400 transition-colors"
-                    >🪑 Stollar & Joylashuv</span
+                    class="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors"
+                    >Stollar & Joylashuv</span
                   >
                   <span
-                    class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
+                    class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
                     >GET</span
                   >
                 </div>
-                <p class="text-xs text-zinc-400 font-mono">/tables</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/tables</p>
               </button>
 
               <button
                 onclick="fetchDictionary('units')"
-                class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-900 text-left transition-all group"
+                class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-left transition-all group"
               >
                 <div class="flex items-center justify-between mb-2">
                   <span
-                    class="text-xs font-bold text-white group-hover:text-red-400 transition-colors"
-                    >⚖️ O'lchov Birliklari</span
+                    class="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors"
+                    >O'lchov Birliklari</span
                   >
                   <span
-                    class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
+                    class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
                     >GET</span
                   >
                 </div>
-                <p class="text-xs text-zinc-400 font-mono">/units</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/units</p>
               </button>
 
               <button
                 onclick="fetchDictionary('products/categories')"
-                class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-900 text-left transition-all group sm:col-span-2"
+                class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70 hover:border-red-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-left transition-all group sm:col-span-2"
               >
                 <div class="flex items-center justify-between mb-2">
                   <span
-                    class="text-xs font-bold text-white group-hover:text-red-400 transition-colors"
-                    >📁 Menyu Kategoriyalari (Daraxtsimon)</span
+                    class="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors"
+                    >Menyu Kategoriyalari (Daraxtsimon)</span
                   >
                   <span
-                    class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
+                    class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold"
                     >GET</span
                   >
                 </div>
-                <p class="text-xs text-zinc-400 font-mono">/products/categories</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/products/categories</p>
               </button>
             </div>
 
             <div
               id="dictDisplayBox"
-              class="hidden p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 space-y-3"
+              class="hidden p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 space-y-3"
             >
               <div
-                class="flex items-center justify-between pb-2 border-b border-zinc-800"
+                class="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800"
               >
                 <h4
                   id="dictTitle"
-                  class="text-xs font-bold text-white uppercase tracking-wider"
+                  class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider"
                 ></h4>
                 <span
                   id="dictCount"
-                  class="text-[10px] font-mono text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700"
+                  class="text-[10px] font-mono text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-300 dark:border-zinc-700"
                 ></span>
               </div>
               <div
@@ -562,29 +579,29 @@
         <!-- RIGHT COLUMN: JONLI API KONSOL VA INSPECTOR (5 COLS) -->
         <div class="lg:col-span-5 space-y-4">
           <div
-            class="sticky top-16 rounded-2xl border border-zinc-800 bg-zinc-900/95 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col h-[calc(100vh-100px)]"
+            class="sticky top-16 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col h-[calc(100vh-100px)]"
           >
             <!-- Console Header -->
             <div
-              class="px-4 py-3 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between"
+              class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between"
             >
               <div class="space-y-0.5">
                 <div class="flex items-center gap-2">
                   <span
                     class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"
                   ></span>
-                  <span class="text-xs font-bold text-white"
+                  <span class="text-xs font-bold text-zinc-900 dark:text-white"
                     >Jonli API Konsol (Live Inspector)</span
                   >
                 </div>
-                <p class="text-[10px] text-zinc-400 hidden sm:block">
+                <p class="text-[10px] text-zinc-500 dark:text-zinc-400 hidden sm:block">
                   Har bir harakat serverga qanday so'rov yuborishini ko'rsatadi
                 </p>
               </div>
               <div class="flex items-center gap-1.5">
                 <button
                   id="copyCurlBtn"
-                  class="flex items-center gap-1 text-[11px] font-mono text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg border border-zinc-800 hover:bg-zinc-800 transition-all"
+                  class="flex items-center gap-1 text-[11px] font-mono text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
                   title="cURL terminal kodini nusxalash"
                 >
                   <i data-lucide="copy" class="w-3 h-3"></i>
@@ -592,55 +609,63 @@
                 </button>
                 <button
                   id="copyFetchBtn"
-                  class="flex items-center gap-1 text-[11px] font-mono text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg border border-zinc-800 hover:bg-zinc-800 transition-all"
+                  class="flex items-center gap-1 text-[11px] font-mono text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
                   title="JavaScript Fetch kodini nusxalash"
                 >
                   <i data-lucide="code" class="w-3 h-3"></i>
                   <span>Fetch</span>
                 </button>
+                <button
+                  id="toggleConsoleBtn"
+                  class="flex items-center gap-1 text-[11px] font-mono text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                  title="Konsolni yashirish/ko'rsatish"
+                >
+                  <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+                </button>
               </div>
             </div>
 
             <!-- Request Details Bar -->
+            <div id="consoleBody" class="flex-1 flex flex-col min-h-0">
             <div
-              class="px-4 py-2.5 bg-zinc-900 border-b border-zinc-800 text-xs font-mono flex items-center justify-between gap-2"
+              class="px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono flex items-center justify-between gap-2"
             >
               <div class="flex items-center gap-2 truncate">
                 <span
                   id="consoleMethod"
-                  class="font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded"
+                  class="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded"
                   >GET</span
                 >
-                <span id="consoleUrl" class="text-zinc-300 truncate"
+                <span id="consoleUrl" class="text-zinc-600 dark:text-zinc-300 truncate"
                   >/api/v1/merchant/products?limit=8</span
                 >
               </div>
               <span
                 id="consoleStatus"
-                class="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0 text-xs"
+                class="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0 text-xs"
                 >200 OK</span
               >
             </div>
 
             <!-- Request / Response Tabs -->
             <div
-              class="flex border-b border-zinc-800 bg-zinc-950/70 text-[11px] font-mono"
+              class="flex border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 text-[11px] font-mono"
             >
               <button
                 id="showResponseTab"
-                class="px-4 py-2 text-white font-bold border-b-2 border-red-500"
+                class="px-4 py-2 text-zinc-900 dark:text-white font-bold border-b-2 border-red-500"
               >
                 Server Javobi (JSON)
               </button>
               <button
                 id="showRequestTab"
-                class="px-4 py-2 text-zinc-400 hover:text-white"
+                class="px-4 py-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
               >
                 Yuborilgan Tana (Payload)
               </button>
               <button
                 id="showHeadersTab"
-                class="px-4 py-2 text-zinc-400 hover:text-white"
+                class="px-4 py-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
               >
                 Sarlavhalar (Headers)
               </button>
@@ -648,20 +673,21 @@
 
             <!-- Code Display Area -->
             <div
-              class="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed bg-zinc-950"
+              class="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed bg-white dark:bg-zinc-950"
             >
               <pre
                 id="consoleOutput"
-                class="text-emerald-400 whitespace-pre-wrap break-all"
+                class="text-emerald-600 dark:text-emerald-400 whitespace-pre-wrap break-all"
               ></pre>
             </div>
 
             <!-- Console Footer Status -->
             <div
-              class="px-4 py-2.5 border-t border-zinc-800 bg-zinc-950 text-[11px] font-mono text-zinc-400 flex items-center justify-between"
+              class="px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 flex items-center justify-between"
             >
               <span id="consoleLatency">Kechikish vaqti: 24ms</span>
-              <span class="text-zinc-500">X-Api-Key autentifikatsiya</span>
+              <span class="text-zinc-400 dark:text-zinc-500">X-Api-Key autentifikatsiya</span>
+            </div>
             </div>
           </div>
         </div>
@@ -674,23 +700,23 @@
       class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4"
     >
       <div
-        class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4"
+        class="w-full max-w-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4"
       >
         <div
-          class="flex items-center justify-between pb-3 border-b border-zinc-800"
+          class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800"
         >
           <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <h3 class="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
               <i data-lucide="plus-circle" class="w-4 h-4 text-red-500"></i>
               <span>Yangi Taom Kiritish (PUT /products)</span>
             </h3>
-            <p class="text-[11px] text-zinc-400 mt-0.5">
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
               Ushbu taom restoran menyusiga darhol qo'shiladi
             </p>
           </div>
           <button
             id="closeAddDishModalBtn"
-            class="text-zinc-400 hover:text-white p-1"
+            class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white p-1"
           >
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
@@ -698,56 +724,56 @@
 
         <div class="space-y-3.5 text-xs">
           <div>
-            <label class="block text-zinc-300 font-semibold mb-1"
+            <label class="block text-zinc-600 dark:text-zinc-300 font-semibold mb-1"
               >Taom nomi (name):</label
             >
             <input
               type="text"
               id="newDishName"
               value="Zim-Zim Maxsus Qozon Kabob"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-100 font-medium focus:outline-none focus:border-red-500"
+              class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-zinc-100 font-medium focus:outline-none focus:border-red-500"
               placeholder="Masalan: Tandir Go'shti"
             />
-            <span class="text-[10px] text-zinc-500 mt-0.5 block"
+            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5 block"
               >Mijozlar menyusida ko'rinadigan to'liq nomi</span
             >
           </div>
           <div>
-            <label class="block text-zinc-300 font-semibold mb-1"
+            <label class="block text-zinc-600 dark:text-zinc-300 font-semibold mb-1"
               >Narxi UZS (price):</label
             >
             <input
               type="number"
               id="newDishPrice"
               value="54000"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-100 font-mono focus:outline-none focus:border-red-500"
+              class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-zinc-100 font-mono focus:outline-none focus:border-red-500"
               placeholder="54000"
             />
-            <span class="text-[10px] text-zinc-500 mt-0.5 block"
+            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5 block"
               >So'mda, hech qanday nuqta yoki bo'shliqsiz</span
             >
           </div>
           <div>
-            <label class="block text-zinc-300 font-semibold mb-1"
+            <label class="block text-zinc-600 dark:text-zinc-300 font-semibold mb-1"
               >Kategoriya / Bo'lim (category):</label
             >
             <input
               type="text"
               id="newDishCategory"
               value="Asosiy taomlar"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-100 focus:outline-none focus:border-red-500"
+              class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-red-500"
               placeholder="Asosiy taomlar, Salatlar..."
             />
           </div>
           <div>
-            <label class="block text-zinc-300 font-semibold mb-1"
+            <label class="block text-zinc-600 dark:text-zinc-300 font-semibold mb-1"
               >Tavsifi (description):</label
             >
             <input
               type="text"
               id="newDishDesc"
               value="Yumshoq go'sht va maxsus kartoshkadan tayyorlangan milliy taom"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-zinc-100 focus:outline-none focus:border-red-500"
+              class="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-red-500"
             />
           </div>
         </div>
@@ -762,7 +788,7 @@
           </button>
           <button
             id="cancelAddDishBtn"
-            class="px-4 py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-800 text-zinc-300 text-xs transition-colors"
+            class="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs transition-colors"
           >
             Bekor qilish
           </button>

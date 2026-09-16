@@ -159,16 +159,17 @@ function showToast(message, type = "success") {
 
   toast.className = `p-3.5 rounded-2xl border shadow-2xl flex items-start gap-2.5 text-xs font-medium animate-fade-in transition-all ${
     isSuccess
-      ? "bg-zinc-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-950/40"
-      : "bg-zinc-900/95 border-red-500/40 text-red-300 shadow-red-950/40"
+      ? "bg-white/95 dark:bg-zinc-900/95 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-emerald-950/40"
+      : "bg-white/95 dark:bg-zinc-900/95 border-red-500/40 text-red-700 dark:text-red-300 shadow-red-950/40"
   }`;
 
   toast.innerHTML = `
-    <span class="text-base shrink-0">${isSuccess ? "✅" : "⚠️"}</span>
+    <i data-lucide="${isSuccess ? "check-circle-2" : "alert-triangle"}" class="w-4 h-4 shrink-0 mt-0.5"></i>
     <div class="flex-1 leading-snug">${message}</div>
   `;
 
   toastContainer.appendChild(toast);
+  refreshIcons();
   setTimeout(() => {
     toast.style.opacity = "0";
     toast.style.transform = "translateY(10px)";
@@ -186,16 +187,16 @@ function updateTokenBanner() {
   if (isDemo) {
     tokenStatusBar.className =
       "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `🟢 <b>Demo Sandbox Rejimi:</b> <span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey}</span> — Barcha amallarni bemalol bosib sinab ko'rishingiz mumkin!`;
+    tokenStatusText.innerHTML = `<b>Demo Sandbox Rejimi:</b> <span class="font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey}</span> — Barcha amallarni bemalol bosib sinab ko'rishingiz mumkin!`;
   } else if (currentApiKey) {
     tokenStatusBar.className =
       "bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
     const orgLabel = currentOrgName ? `<b>${currentOrgName}</b> — ` : "";
-    tokenStatusText.innerHTML = `🟢 <b>Jonli Server Ulangan:</b> ${orgLabel}<span class="font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey.slice(0, 10)}••••••••</span> — So'rovlar to'g'ridan-to'g'ri haqiqiy serverga yuborilmoqda.`;
+    tokenStatusText.innerHTML = `<b>Jonli Server Ulangan:</b> ${orgLabel}<span class="font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-md font-semibold">${currentApiKey.slice(0, 10)}••••••••</span> — So'rovlar to'g'ridan-to'g'ri haqiqiy serverga yuborilmoqda.`;
   } else {
     tokenStatusBar.className =
       "bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors";
-    tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting yoki "Demo token" tugmasini bosing.`;
+    tokenStatusText.innerHTML = `<b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting yoki "Demo token" tugmasini bosing.`;
   }
 }
 
@@ -301,7 +302,7 @@ async function callApi(method, path, body = null) {
         (typeof realData?.error === "string" ? realData.error : null) ||
         fetchError ||
         `Server xatosi (HTTP ${resStatus})`;
-      showToast(`⚠️ Server xatosi: ${errMsg}`, "error");
+      showToast(`Server xatosi: ${errMsg}`, "error");
       return { ok: false, status: resStatus, error: errMsg, data: realData };
     }
   }
@@ -504,16 +505,16 @@ function updateConsoleView() {
   const m = lastInspectorData.method;
   if (m === "GET") {
     consoleMethod.className =
-      "font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded";
+      "font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded";
   } else if (m === "PUT") {
     consoleMethod.className =
-      "font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded";
+      "font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded";
   } else if (m === "POST") {
     consoleMethod.className =
-      "font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded";
+      "font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded";
   } else if (m === "DELETE") {
     consoleMethod.className =
-      "font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded";
+      "font-bold text-red-600 dark:text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded";
   }
 
   consoleUrl.textContent = `${API_BASE_URL}${lastInspectorData.url}`;
@@ -536,7 +537,7 @@ function updateConsoleView() {
       lastInspectorData.responseStatus.includes("OK")) &&
     !hasBodyError;
   consoleStatus.className = `font-bold px-2 py-0.5 rounded-full shrink-0 text-xs ${
-    isOk ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+    isOk ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600 dark:text-red-400"
   }`;
 
   if (activeConsoleTab === "response") {
@@ -546,38 +547,38 @@ function updateConsoleView() {
       2,
     );
     consoleOutput.className = isOk
-      ? "text-emerald-400 whitespace-pre-wrap break-all"
-      : "text-red-300 whitespace-pre-wrap break-all";
+      ? "text-emerald-600 dark:text-emerald-400 whitespace-pre-wrap break-all"
+      : "text-red-700 dark:text-red-300 whitespace-pre-wrap break-all";
   } else if (activeConsoleTab === "request") {
     consoleOutput.textContent = lastInspectorData.requestBody
       ? JSON.stringify(lastInspectorData.requestBody, null, 2)
       : "// Ushbu so'rovda tana (request body) mavjud emas";
-    consoleOutput.className = "text-blue-400 whitespace-pre-wrap break-all";
+    consoleOutput.className = "text-blue-600 dark:text-blue-400 whitespace-pre-wrap break-all";
   } else if (activeConsoleTab === "headers") {
     consoleOutput.textContent = JSON.stringify(
       lastInspectorData.headers,
       null,
       2,
     );
-    consoleOutput.className = "text-amber-400 whitespace-pre-wrap break-all";
+    consoleOutput.className = "text-amber-600 dark:text-amber-400 whitespace-pre-wrap break-all";
   }
 }
 
 function setConsoleTab(tab) {
   activeConsoleTab = tab;
   [showResponseTab, showRequestTab, showHeadersTab].forEach((btn) => {
-    btn.className = "px-4 py-2 text-zinc-400 hover:text-white";
+    btn.className = "px-4 py-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white";
   });
 
   if (tab === "response") {
     showResponseTab.className =
-      "px-4 py-2 text-white font-bold border-b-2 border-red-500";
+      "px-4 py-2 text-zinc-900 dark:text-white font-bold border-b-2 border-red-500";
   } else if (tab === "request") {
     showRequestTab.className =
-      "px-4 py-2 text-white font-bold border-b-2 border-red-500";
+      "px-4 py-2 text-zinc-900 dark:text-white font-bold border-b-2 border-red-500";
   } else if (tab === "headers") {
     showHeadersTab.className =
-      "px-4 py-2 text-white font-bold border-b-2 border-red-500";
+      "px-4 py-2 text-zinc-900 dark:text-white font-bold border-b-2 border-red-500";
   }
   updateConsoleView();
 }
@@ -598,7 +599,7 @@ copyCurlBtn.onclick = async () => {
   }
 
   await navigator.clipboard.writeText(curl);
-  copyCurlBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Nusxalandi!</span>`;
+  copyCurlBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-600 dark:text-emerald-400"></i><span class="text-emerald-600 dark:text-emerald-400">Nusxalandi!</span>`;
   refreshIcons();
   setTimeout(() => {
     copyCurlBtn.innerHTML = `<i data-lucide="copy" class="w-3 h-3"></i><span>cURL</span>`;
@@ -618,7 +619,7 @@ if (copyFetchBtn) {
     code += `});\nconst data = await res.json();\nconsole.log(data);`;
 
     await navigator.clipboard.writeText(code);
-    copyFetchBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Nusxalandi!</span>`;
+    copyFetchBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-600 dark:text-emerald-400"></i><span class="text-emerald-600 dark:text-emerald-400">Nusxalandi!</span>`;
     refreshIcons();
     setTimeout(() => {
       copyFetchBtn.innerHTML = `<i data-lucide="code" class="w-3 h-3"></i><span>Fetch</span>`;
@@ -638,7 +639,7 @@ async function loadOrganizationMeta() {
         paymentTypeSelect.innerHTML = ptList
           .map(
             (pt) =>
-              `<option value="${pt.payment_type_id || pt.id}">💳 ${pt.name} (ID: ${pt.payment_type_id || pt.id})</option>`,
+              `<option value="${pt.payment_type_id || pt.id}">${pt.name} (ID: ${pt.payment_type_id || pt.id})</option>`,
           )
           .join("");
       }
@@ -665,7 +666,7 @@ async function loadOrganizationMeta() {
 // ── Taomlar Ro'yxatini Chizish (Render Products) ──
 async function loadProducts() {
   productsGrid.innerHTML = `
-    <div class="col-span-2 py-12 text-center text-zinc-500 text-xs flex flex-col items-center gap-2">
+    <div class="col-span-2 py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs flex flex-col items-center gap-2">
       <div class="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
       <span>Taomlar yuklanmoqda...</span>
     </div>
@@ -688,7 +689,7 @@ function renderProductsGrid() {
   productsGrid.innerHTML = "";
   if (currentProducts.length === 0) {
     productsGrid.innerHTML = `
-      <div class="col-span-2 py-12 text-center text-zinc-500 text-xs">
+      <div class="col-span-2 py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs">
         Menyuda hech qanday taom topilmadi. Yuqoridagi "+ Yangi taom qo'shish" tugmasini bosing.
       </div>
     `;
@@ -698,39 +699,39 @@ function renderProductsGrid() {
   currentProducts.forEach((p) => {
     const card = document.createElement("div");
     card.className =
-      "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/80 hover:border-zinc-700 flex flex-col justify-between gap-3.5 transition-all shadow-md group";
+      "p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-zinc-300 dark:hover:border-zinc-700 flex flex-col justify-between gap-3.5 transition-all shadow-md group";
     card.innerHTML = `
       <div class="space-y-2">
         <div class="flex items-center justify-between">
-          <span class="text-[10px] font-mono font-bold text-zinc-500 bg-zinc-950 px-2 py-0.5 rounded-md border border-zinc-800">ID: #${p.product_id}</span>
+          <span class="text-[10px] font-mono font-bold text-zinc-400 dark:text-zinc-500 bg-white dark:bg-zinc-950 px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800">ID: #${p.product_id}</span>
           <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold ${
             p.enable
-              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-              : "bg-red-500/10 text-red-400 border border-red-500/20"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+              : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
           }">
-            ${p.enable ? "🟢 Sotuvda bor" : "🔴 Tugagan"}
+            ${p.enable ? "Sotuvda bor" : "Tugagan"}
           </span>
         </div>
 
         <div>
-          <h4 class="text-sm font-bold text-white group-hover:text-red-400 transition-colors">${p.name}</h4>
-          ${p.category ? `<span class="text-[10px] text-zinc-400 font-medium">${p.category}</span>` : ""}
+          <h4 class="text-sm font-bold text-zinc-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">${p.name}</h4>
+          ${p.category ? `<span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">${p.category}</span>` : ""}
         </div>
 
-        <p class="text-sm font-mono text-red-400 font-extrabold tracking-tight">${Number(p.price).toLocaleString()} UZS</p>
+        <p class="text-sm font-mono text-red-600 dark:text-red-400 font-extrabold tracking-tight">${Number(p.price).toLocaleString()} UZS</p>
       </div>
 
       <!-- Tushunarli Matnli Tugmalar -->
-      <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800/80">
+      <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80">
         <button onclick="addToCart(${p.product_id})" class="flex-1 py-2 px-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-red-600/20" title="Savatga qo'shish">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
           <span>Savatga</span>
         </button>
-        <button onclick="editPricePrompt(${p.product_id}, ${p.price})" class="py-2 px-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-semibold flex items-center gap-1 transition-all" title="Taom narxini o'zgartirish">
-          <i data-lucide="edit-3" class="w-3 h-3 text-blue-400"></i>
+        <button onclick="editPricePrompt(${p.product_id}, ${p.price})" class="py-2 px-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white text-xs font-semibold flex items-center gap-1 transition-all" title="Taom narxini o'zgartirish">
+          <i data-lucide="edit-3" class="w-3 h-3 text-blue-600 dark:text-blue-400"></i>
           <span>Narx</span>
         </button>
-        <button onclick="deleteProduct(${p.product_id})" class="py-2 px-2.5 rounded-xl bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-400 text-xs font-semibold flex items-center gap-1 transition-all" title="Taomni o'chirish">
+        <button onclick="deleteProduct(${p.product_id})" class="py-2 px-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-red-500/20 text-zinc-600 dark:text-zinc-300 hover:text-red-600 dark:hover:text-red-400 text-xs font-semibold flex items-center gap-1 transition-all" title="Taomni o'chirish">
           <i data-lucide="trash-2" class="w-3 h-3"></i>
         </button>
       </div>
@@ -782,12 +783,12 @@ window.quickTest = async (action) => {
       renderProductsGrid();
       showTab("products");
       showToast(
-        `🎉 <b>Yangi taom qo'shildi:</b> "${name}" (${price.toLocaleString()} UZS). Konsolda PUT javobi ko'rinmoqda!`,
+        `<b>Yangi taom qo'shildi:</b> "${name}" (${price.toLocaleString()} UZS). Konsolda PUT javobi ko'rinmoqda!`,
       );
     }
   } else if (action === "update") {
     if (currentProducts.length === 0) {
-      showToast("⚠️ Yangilash uchun avval menyuda taom bo'lishi kerak", "error");
+      showToast("Yangilash uchun avval menyuda taom bo'lishi kerak", "error");
       return;
     }
     const dish = currentProducts[0];
@@ -809,12 +810,12 @@ window.quickTest = async (action) => {
       renderProductsGrid();
       showTab("products");
       showToast(
-        `✏️ <b>Narx yangilandi:</b> "${dish.name}" narxi ${newPrice.toLocaleString()} UZS ga o'zgardi!`,
+        `<b>Narx yangilandi:</b> "${dish.name}" narxi ${newPrice.toLocaleString()} UZS ga o'zgardi!`,
       );
     }
   } else if (action === "order") {
     if (currentProducts.length === 0) {
-      showToast("⚠️ Buyurtma ochish uchun menyuda kamida bitta taom bo'lishi kerak", "error");
+      showToast("Buyurtma ochish uchun menyuda kamida bitta taom bo'lishi kerak", "error");
       return;
     }
     // 1- va 2-taomlarni savatga solish
@@ -856,7 +857,7 @@ window.quickTest = async (action) => {
       refreshIcons();
 
       showToast(
-        `🛒 <b>Kassa buyurtmasi ochildi!</b> #${orderId}-raqamli buyurtma yaratildi. Endi "To'lov bilan yopish"ni bosing!`,
+        `<b>Kassa buyurtmasi ochildi!</b> #${orderId}-raqamli buyurtma yaratildi. Endi "To'lov bilan yopish"ni bosing!`,
       );
     }
   }
@@ -909,7 +910,7 @@ submitAddDishBtn.onclick = async () => {
     });
     productCountBadge.textContent = `${currentProducts.length} taom`;
     renderProductsGrid();
-    showToast(`🎉 "${name}" taomi menyuga muvaffaqiyatli qo'shildi!`);
+    showToast(`"${name}" taomi menyuga muvaffaqiyatli qo'shildi!`);
   }
 };
 
@@ -941,7 +942,7 @@ window.editPricePrompt = async (productId, oldPrice) => {
       found.price = newPrice;
       renderProductsGrid();
       showToast(
-        `✏️ #${productId} taom narxi ${newPrice.toLocaleString()} UZS ga yangilandi!`,
+        `#${productId} taom narxi ${newPrice.toLocaleString()} UZS ga yangilandi!`,
       );
     }
   }
@@ -971,7 +972,7 @@ window.deleteProduct = async (productId) => {
     );
     productCountBadge.textContent = `${currentProducts.length} taom`;
     renderProductsGrid();
-    showToast(`🗑 "${title}" menyudan o'chirildi!`);
+    showToast(`"${title}" menyudan o'chirildi!`);
   }
 };
 
@@ -993,13 +994,13 @@ window.addToCart = (productId) => {
 
   updateCartView();
   showToast(
-    `🛒 <b>"${product.name}"</b> savatga qo'shildi! Yuqoridagi "2. Kassa & Buyurtma" bo'limiga o'ting.`,
+    `<b>"${product.name}"</b> savatga qo'shildi! Yuqoridagi "2. Kassa & Buyurtma" bo'limiga o'ting.`,
   );
 };
 
 function updateCartView() {
   if (currentCart.length === 0) {
-    orderItemsList.innerHTML = `<div class="py-8 text-center text-zinc-500 text-xs">Savat hozircha bo'sh.<br/>Chapdagi "1. Taomlar & Menyu" bo'limidan taom qo'shing.</div>`;
+    orderItemsList.innerHTML = `<div class="py-8 text-center text-zinc-400 dark:text-zinc-500 text-xs">Savat hozircha bo'sh.<br/>Chapdagi "1. Taomlar & Menyu" bo'limidan taom qo'shing.</div>`;
     orderTotalAmount.textContent = "0 UZS";
     return;
   }
@@ -1013,15 +1014,15 @@ function updateCartView() {
 
     const row = document.createElement("div");
     row.className =
-      "py-2.5 flex justify-between items-center text-zinc-200 text-xs";
+      "py-2.5 flex justify-between items-center text-zinc-700 dark:text-zinc-200 text-xs";
     row.innerHTML = `
       <div class="truncate mr-2">
-        <span class="font-bold text-white block truncate">${item.name}</span>
-        <span class="text-[10px] text-zinc-500 font-mono">ID: #${item.product_id} • ${Number(item.price).toLocaleString()} x ${qty}</span>
+        <span class="font-bold text-zinc-900 dark:text-white block truncate">${item.name}</span>
+        <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">ID: #${item.product_id} • ${Number(item.price).toLocaleString()} x ${qty}</span>
       </div>
       <div class="flex items-center gap-2.5 shrink-0">
-        <span class="font-mono text-red-400 font-bold">${subtotal.toLocaleString()} UZS</span>
-        <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-1 transition-colors" title="Savatdan o'chirish">
+        <span class="font-mono text-red-600 dark:text-red-400 font-bold">${subtotal.toLocaleString()} UZS</span>
+        <button onclick="removeFromCart(${index})" class="text-zinc-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 p-1 transition-colors" title="Savatdan o'chirish">
           <i data-lucide="trash" class="w-3.5 h-3.5"></i>
         </button>
       </div>
@@ -1099,7 +1100,7 @@ createOrderBtn.onclick = async () => {
     refreshIcons();
 
     showToast(
-      `🎉 <b>Yangi Buyurtma #${orderId} ochildi!</b> Oshxonaga qabul qilindi. Endi to'lov bilan yopishingiz mumkin.`,
+      `<b>Yangi Buyurtma #${orderId} ochildi!</b> Oshxonaga qabul qilindi. Endi to'lov bilan yopishingiz mumkin.`,
     );
   }
 };
@@ -1138,7 +1139,7 @@ closeOrderBtn.onclick = async () => {
 
   if (res.ok) {
     showToast(
-      `🎉 <b>Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi!</b> Kassa kvitansiyasi chiqarildi.`,
+      `<b>Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi!</b> Kassa kvitansiyasi chiqarildi.`,
     );
     currentCart = [];
     updateCartView();
@@ -1161,20 +1162,20 @@ window.fetchDictionary = async (dictType) => {
     dictContentList.innerHTML = items
       .map(
         (it) => `
-        <div class="p-3 rounded-xl border border-zinc-800 bg-zinc-950 flex items-center justify-between">
+        <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between">
           <div>
-            <span class="font-bold text-white block">${it.name || it.short_name || it.short || `ID: #${it.id || it.product_id || it.payment_type_id || it.table_id || it.place_id || it.unit_id}`}</span>
-            ${it.capacity ? `<span class="text-[10px] text-zinc-500">Sig'imi: ${it.capacity} kishi</span>` : ""}
-            ${it.seats ? `<span class="text-[10px] text-zinc-500">O'rinlar: ${it.seats} ta</span>` : ""}
-            ${it.number ? `<span class="text-[10px] text-zinc-500">Stol raqami: #${it.number}</span>` : ""}
+            <span class="font-bold text-zinc-900 dark:text-white block">${it.name || it.short_name || it.short || `ID: #${it.id || it.product_id || it.payment_type_id || it.table_id || it.place_id || it.unit_id}`}</span>
+            ${it.capacity ? `<span class="text-[10px] text-zinc-400 dark:text-zinc-500">Sig'imi: ${it.capacity} kishi</span>` : ""}
+            ${it.seats ? `<span class="text-[10px] text-zinc-400 dark:text-zinc-500">O'rinlar: ${it.seats} ta</span>` : ""}
+            ${it.number ? `<span class="text-[10px] text-zinc-400 dark:text-zinc-500">Stol raqami: #${it.number}</span>` : ""}
           </div>
-          <span class="font-mono text-zinc-400 text-xs bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">ID: #${it.id || it.product_id || it.payment_type_id || it.table_id || it.place_id || it.unit_id}</span>
+          <span class="font-mono text-zinc-500 dark:text-zinc-400 text-xs bg-zinc-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-800">ID: #${it.id || it.product_id || it.payment_type_id || it.table_id || it.place_id || it.unit_id}</span>
         </div>
       `,
       )
       .join("");
     showToast(
-      `📚 ${normalizedPath} bo'yicha ${items.length} ta ma'lumot yuklandi va konsolda ko'rsatildi!`,
+      `${normalizedPath} bo'yicha ${items.length} ta ma'lumot yuklandi va konsolda ko'rsatildi!`,
     );
   }
 };
@@ -1186,21 +1187,21 @@ function showTab(tabName) {
   );
   [tabProductsBtn, tabOrdersBtn, tabDictsBtn].forEach((btn) => {
     btn.className =
-      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-400 hover:text-white flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center gap-2";
   });
 
   if (tabName === "products") {
     tabProducts.classList.remove("hidden");
     tabProductsBtn.className =
-      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm flex items-center justify-center gap-2";
   } else if (tabName === "orders") {
     tabOrders.classList.remove("hidden");
     tabOrdersBtn.className =
-      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm flex items-center justify-center gap-2";
   } else if (tabName === "dicts") {
     tabDicts.classList.remove("hidden");
     tabDictsBtn.className =
-      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-800 text-white shadow-sm flex items-center justify-center gap-2";
+      "flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm flex items-center justify-center gap-2";
   }
 }
 
@@ -1236,7 +1237,7 @@ saveKeyBtn.onclick = () => {
     saveKeyBtn.className =
       "px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-md shadow-red-600/20 transition-all shrink-0";
   }, 1500);
-  showToast("🔑 Yangi API token muvaffaqiyatli saqlandi!");
+  showToast("Yangi API token muvaffaqiyatli saqlandi!");
   loadProducts();
   loadOrganizationMeta();
 };
@@ -1248,7 +1249,7 @@ if (resetDemoKeyBtn) {
     apiKeyInput.value = currentApiKey;
     currentOrgName = null;
     updateTokenBanner();
-    showToast("🟢 Standart demo token tiklandi!");
+    showToast("Standart demo token tiklandi!");
     loadProducts();
     loadOrganizationMeta();
   };
@@ -1267,9 +1268,34 @@ toggleKeyVisibility.onclick = () => {
   refreshIcons();
 };
 
+const themeToggleBtn = document.getElementById("themeToggleBtn");
+if (themeToggleBtn) {
+  themeToggleBtn.onclick = () => {
+    const isDark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem("zimzim_theme", isDark ? "dark" : "light");
+  };
+}
+
+// ── Jonli Konsolni Yashirish / Ko'rsatish ──
+const toggleConsoleBtn = document.getElementById("toggleConsoleBtn");
+const consoleBody = document.getElementById("consoleBody");
+if (toggleConsoleBtn && consoleBody) {
+  const consolePanel = toggleConsoleBtn.closest(".sticky");
+  toggleConsoleBtn.onclick = () => {
+    const isHidden = consoleBody.classList.toggle("hidden");
+    toggleConsoleBtn.innerHTML = isHidden
+      ? '<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>'
+      : '<i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>';
+    if (consolePanel) {
+      consolePanel.classList.toggle("h-[calc(100vh-100px)]", !isHidden);
+    }
+    refreshIcons();
+  };
+}
+
 refreshProductsBtn.onclick = () => {
   loadProducts();
-  showToast("🔄 Menyudagi taomlar yangilandi!");
+  showToast("Menyudagi taomlar yangilandi!");
 };
 
 // Dastur ishga tushishi
