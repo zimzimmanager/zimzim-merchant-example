@@ -1,14 +1,16 @@
 /**
  * ============================================================================
- * Zim-Zim Merchant API — Example Web App Server (Node.js built-in HTTP)
+ * Zim-Zim Merchant API — Example Web App Server
  * ============================================================================
- * Ushbu server:
- *   1. Interaktiv veb-sayt interfeysini brauzerga uzatadi (port 3030)
- *   2. Brauzerdan to'g'ridan-to'g'ri Zim-Zim API ga so'rov yuborishda
- *      CORS cheklovlarini aylanib o'tish uchun qulay Proxy vazifasini bajaradi.
+ * Built-in Node.js HTTP Server & Proxy (Zero Dependencies).
  * 
- * Ishga tushirish:
- *   node server.js
+ * Features:
+ *   1. Serves the interactive Web App (HTML, CSS, JS, Assets)
+ *   2. Transparent API Proxy (/api/proxy -> https://api-kafe.zim-zim.uz) to bypass browser CORS
+ *   3. Colorized request logging in console
+ * 
+ * Run:
+ *   npm start (or node server.js)
  */
 
 const http = require('http');
@@ -27,13 +29,14 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
 };
 
 const server = http.createServer((req, res) => {
-  // CORS Headers for local development
+  // CORS Headers for browser requests
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Api-Key, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Api-Key, Authorization, Accept');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -42,8 +45,9 @@ const server = http.createServer((req, res) => {
   }
 
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+  const startTime = Date.now();
 
-  // ── Proxy endpoint to forward requests to Zim-Zim Merchant API ──
+  // ── Proxy endpoint to Zim-Zim Merchant API ──
   if (parsedUrl.pathname.startsWith('/api/proxy')) {
     const targetPath = parsedUrl.pathname.replace('/api/proxy', '') + parsedUrl.search;
     const targetUrl = new URL(`https://api-kafe.zim-zim.uz/api/v1/merchant${targetPath}`);
@@ -51,16 +55,17 @@ const server = http.createServer((req, res) => {
     const clientHeaders = {
       'Content-Type': req.headers['content-type'] || 'application/json',
       'Accept': 'application/json',
+      'User-Agent': 'ZimZim-Example-App/1.0',
     };
 
     if (req.headers['x-api-key']) {
       clientHeaders['X-Api-Key'] = req.headers['x-api-key'];
     }
 
-    let bodyData = [];
-    req.on('data', (chunk) => bodyData.push(chunk));
+    let bodyChunks = [];
+    req.on('data', (chunk) => bodyChunks.push(chunk));
     req.on('end', () => {
-      const bodyBuffer = Buffer.concat(bodyData);
+      const bodyBuffer = Buffer.concat(bodyChunks);
 
       const proxyReq = https.request(
         targetUrl,
@@ -74,12 +79,17 @@ const server = http.createServer((req, res) => {
         (proxyRes) => {
           res.writeHead(proxyRes.statusCode, proxyRes.headers);
           proxyRes.pipe(res);
+
+          const elapsed = Date.now() - startTime;
+          const statusColor = proxyRes.statusCode < 400 ? '\x1b[32m' : '\x1b[31m';
+          console.log(`[PROXY] ${req.method} ${targetPath} -> ${statusColor}${proxyRes.statusCode}\x1b[0m (${elapsed}ms)`);
         }
       );
 
       proxyReq.on('error', (err) => {
+        console.error(`[PROXY ERROR] ${err.message}`);
         res.writeHead(502, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
+        res.end(JSON.stringify({ success: false, error: 'Proxy Connection Failed', details: err.message }));
       });
 
       if (bodyBuffer.length > 0) {
@@ -112,8 +122,9 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`\n======================================================`);
-  console.log(`🚀 Zim-Zim Merchant API Example Web App ishga tushdi!`);
-  console.log(`👉 Brauzerda oching: http://localhost:${PORT}`);
-  console.log(`======================================================\n`);
+  console.log(`\n\x1b[31m╔════════════════════════════════════════════════════════════════╗\x1b[0m`);
+  console.log(`\x1b[31m║\x1b[0m  🍕 \x1b[1mZim-Zim Merchant API — Interactive Web App is Running!\x1b[0m     \x1b[31m║\x1b[0m`);
+  console.log(`\x1b[31m║\x1b[0m  👉 Open in your browser: \x1b[36mhttp://localhost:${PORT}\x1b[0m              \x1b[31m║\x1b[0m`);
+  console.log(`\x1b[31m║\x1b[0m  📡 Proxy Endpoint: \x1b[33mhttp://localhost:${PORT}/api/proxy\x1b[0m            \x1b[31m║\x1b[0m`);
+  console.log(`\x1b[31m╚════════════════════════════════════════════════════════════════╝\x1b[0m\n`);
 });

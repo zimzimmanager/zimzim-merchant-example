@@ -10,7 +10,7 @@ let currentActiveOrderId = null;
 // Console state
 let lastInspectorData = {
   method: 'GET',
-  url: '/api/v1/merchant/products?limit=6',
+  url: '/api/v1/merchant/products?limit=8',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -19,7 +19,7 @@ let lastInspectorData = {
   requestBody: null,
   responseStatus: '200 OK',
   responseBody: {},
-  latency: 42,
+  latency: 38,
 };
 let activeConsoleTab = 'response';
 
@@ -27,6 +27,9 @@ let activeConsoleTab = 'response';
 const apiKeyInput = document.getElementById('apiKeyInput');
 const saveKeyBtn = document.getElementById('saveKeyBtn');
 const toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
+const tokenStatusBar = document.getElementById('tokenStatusBar');
+const tokenStatusText = document.getElementById('tokenStatusText');
+const productCountBadge = document.getElementById('productCountBadge');
 const productsGrid = document.getElementById('productsGrid');
 const refreshProductsBtn = document.getElementById('refreshProductsBtn');
 
@@ -37,6 +40,7 @@ const consoleStatus = document.getElementById('consoleStatus');
 const consoleOutput = document.getElementById('consoleOutput');
 const consoleLatency = document.getElementById('consoleLatency');
 const copyCurlBtn = document.getElementById('copyCurlBtn');
+const copyFetchBtn = document.getElementById('copyFetchBtn');
 const showResponseTab = document.getElementById('showResponseTab');
 const showRequestTab = document.getElementById('showRequestTab');
 const showHeadersTab = document.getElementById('showHeadersTab');
@@ -67,14 +71,24 @@ const activeOrderId = document.getElementById('activeOrderId');
 const orderItemsList = document.getElementById('orderItemsList');
 const orderTotalAmount = document.getElementById('orderTotalAmount');
 
-// Initialize Lucide icons
 function refreshIcons() {
   if (window.lucide) {
     window.lucide.createIcons();
   }
 }
 
-// ── API Caller Helper (via local proxy to bypass CORS) ──
+// ── Update Token Status Bar UI ──
+function updateTokenBanner() {
+  if (currentApiKey) {
+    tokenStatusBar.className = 'bg-emerald-500/10 border-b border-emerald-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors';
+    tokenStatusText.innerHTML = `🟢 <b>API Token ulangan:</b> <span class="font-mono">${currentApiKey.slice(0, 10)}••••••••</span>. Barcha so'rovlar real serverga yo'naltirilmoqda.`;
+  } else {
+    tokenStatusBar.className = 'bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 flex items-center justify-between text-xs transition-colors';
+    tokenStatusText.innerHTML = `⚠️ <b>API Token kiritilmagan:</b> Yuqoridagi maydonga o'z <b>X-Api-Key</b> maxfiy tokeningizni kiriting va "Saqlash" tugmasini bosing.`;
+  }
+}
+
+// ── API Caller (Local Proxy via server.js) ──
 async function callApi(method, path, body = null) {
   const startTime = Date.now();
   const headers = {
@@ -103,7 +117,6 @@ async function callApi(method, path, body = null) {
       data = { status: res.status, statusText: res.statusText };
     }
 
-    // Update Console Inspector
     lastInspectorData = {
       method,
       url: `/api/v1/merchant${path}`,
@@ -139,7 +152,6 @@ function updateConsoleView() {
   consoleStatus.textContent = lastInspectorData.responseStatus;
   consoleLatency.textContent = `Latency: ${lastInspectorData.latency}ms`;
 
-  // Color badges
   const isOk = lastInspectorData.responseStatus.startsWith('2');
   consoleStatus.className = `font-bold px-2 py-0.5 rounded-full shrink-0 text-xs ${
     isOk ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
@@ -147,7 +159,7 @@ function updateConsoleView() {
 
   if (activeConsoleTab === 'response') {
     consoleOutput.textContent = JSON.stringify(lastInspectorData.responseBody, null, 2);
-    consoleOutput.className = 'text-emerald-400 whitespace-pre-wrap break-all';
+    consoleOutput.className = isOk ? 'text-emerald-400 whitespace-pre-wrap break-all' : 'text-rose-400 whitespace-pre-wrap break-all';
   } else if (activeConsoleTab === 'request') {
     consoleOutput.textContent = lastInspectorData.requestBody
       ? JSON.stringify(lastInspectorData.requestBody, null, 2)
@@ -159,7 +171,6 @@ function updateConsoleView() {
   }
 }
 
-// ── Tab Switcher for Inspector ──
 function setConsoleTab(tab) {
   activeConsoleTab = tab;
   [showResponseTab, showRequestTab, showHeadersTab].forEach((btn) => {
@@ -180,7 +191,7 @@ showResponseTab.onclick = () => setConsoleTab('response');
 showRequestTab.onclick = () => setConsoleTab('request');
 showHeadersTab.onclick = () => setConsoleTab('headers');
 
-// ── Copy cURL Helper ──
+// ── Copy cURL ──
 copyCurlBtn.onclick = async () => {
   const { method, url, headers, requestBody } = lastInspectorData;
   let curl = `curl -X ${method} "https://api-kafe.zim-zim.uz${url}" \\\n`;
@@ -195,17 +206,39 @@ copyCurlBtn.onclick = async () => {
   copyCurlBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>`;
   refreshIcons();
   setTimeout(() => {
-    copyCurlBtn.innerHTML = `<i data-lucide="copy" class="w-3 h-3"></i><span>Copy cURL</span>`;
+    copyCurlBtn.innerHTML = `<i data-lucide="copy" class="w-3 h-3"></i><span>cURL</span>`;
     refreshIcons();
   }, 2000);
 };
+
+// ── Copy Fetch ──
+if (copyFetchBtn) {
+  copyFetchBtn.onclick = async () => {
+    const { method, url, headers, requestBody } = lastInspectorData;
+    let code = `const res = await fetch('https://api-kafe.zim-zim.uz${url}', {\n`;
+    code += `  method: '${method}',\n`;
+    code += `  headers: ${JSON.stringify(headers, null, 4)},\n`;
+    if (requestBody) {
+      code += `  body: JSON.stringify(${JSON.stringify(requestBody, null, 4)}),\n`;
+    }
+    code += `});\nconst data = await res.json();\nconsole.log(data);`;
+
+    await navigator.clipboard.writeText(code);
+    copyFetchBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>`;
+    refreshIcons();
+    setTimeout(() => {
+      copyFetchBtn.innerHTML = `<i data-lucide="code" class="w-3 h-3"></i><span>Fetch</span>`;
+      refreshIcons();
+    }, 2000);
+  };
+}
 
 // ── Fetch & Render Products (GET /products) ──
 async function loadProducts() {
   productsGrid.innerHTML = `
     <div class="col-span-2 py-12 text-center text-zinc-500 text-xs flex flex-col items-center gap-2">
       <div class="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-      <span>Mahsulotlar yuklanmoqda...</span>
+      <span>Mahsulotlar serverdan yuklanmoqda...</span>
     </div>
   `;
 
@@ -214,15 +247,18 @@ async function loadProducts() {
   if (res.ok && res.data?.data && res.data.data.length > 0) {
     currentProducts = res.data.data;
   } else {
-    // Agar API Key bo'lmasa yoki serverda test ma'lumoti bo'lmasa demo ma'lumotlar
+    // Demo fallback dishes agar token kiritilmagan bo'lsa
     currentProducts = [
-      { product_id: 136001, name: "Qiyma Shashlik", price: 24000, enable: true },
-      { product_id: 136002, name: "Jaz Go'shtli Shashlik", price: 28000, enable: true },
-      { product_id: 136003, name: "Zim-Zim Maxsus Palov", price: 42000, enable: true },
-      { product_id: 136004, name: "Tandir Somsa", price: 12000, enable: true },
+      { product_id: 136001, name: "Zim-Zim Qiyma Shashlik", price: 28000, enable: true },
+      { product_id: 136002, name: "Jaz Mol Go'shti Shashlik", price: 34000, enable: true },
+      { product_id: 136003, name: "Zim-Zim Maxsus To'y Palovi", price: 45000, enable: true },
+      { product_id: 136004, name: "Tandir Somsa (Go'shtli)", price: 14000, enable: true },
+      { product_id: 136005, name: "Achichiq-chuchuk Salati", price: 12000, enable: true },
+      { product_id: 136006, name: "Ko'k Choy (Choynakda)", price: 6000, enable: true },
     ];
   }
 
+  productCountBadge.textContent = `${currentProducts.length} taom`;
   renderProductsGrid();
 }
 
@@ -230,28 +266,28 @@ function renderProductsGrid() {
   productsGrid.innerHTML = '';
   currentProducts.forEach((p) => {
     const card = document.createElement('div');
-    card.className = 'p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 flex flex-col justify-between gap-3 hover:border-zinc-700 transition-all';
+    card.className = 'p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 flex flex-col justify-between gap-3 hover:border-zinc-700 transition-all shadow-sm';
     card.innerHTML = `
-      <div class="space-y-1">
+      <div class="space-y-1.5">
         <div class="flex items-center justify-between">
           <span class="text-[10px] font-mono font-bold text-zinc-500">ID: #${p.product_id}</span>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${p.enable ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}">
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${p.enable ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
             ${p.enable ? 'Sotuvda bor' : 'Tugagan'}
           </span>
         </div>
         <h3 class="text-sm font-bold text-white">${p.name}</h3>
-        <p class="text-xs font-mono text-red-400 font-semibold">${Number(p.price).toLocaleString()} UZS</p>
+        <p class="text-xs font-mono text-red-500 dark:text-red-400 font-bold">${Number(p.price).toLocaleString()} UZS</p>
       </div>
 
-      <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800/80">
+      <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800">
         <button onclick="addToCart(${p.product_id})" class="flex-1 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center justify-center gap-1 transition-colors">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
           <span>Savatga</span>
         </button>
-        <button onclick="editPricePrompt(${p.product_id}, ${p.price})" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs" title="Narxini o'zgartirish">
+        <button onclick="editPricePrompt(${p.product_id}, ${p.price})" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs" title="Narxini yangilash (PUT)">
           <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
         </button>
-        <button onclick="deleteProduct(${p.product_id})" class="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs" title="O'chirish">
+        <button onclick="deleteProduct(${p.product_id})" class="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs" title="O'chirish (DELETE)">
           <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
         </button>
       </div>
@@ -292,9 +328,9 @@ submitAddDishBtn.onclick = async () => {
   addDishModal.classList.add('hidden');
   addDishModal.classList.remove('flex');
 
-  // Add to local state
-  const newId = res.data?.data?.[0]?.product_id || Date.now() % 100000;
+  const newId = res.data?.data?.[0]?.product_id || Math.floor(100000 + Math.random() * 90000);
   currentProducts.unshift({ product_id: newId, name, price, enable: true });
+  productCountBadge.textContent = `${currentProducts.length} taom`;
   renderProductsGrid();
 };
 
@@ -324,10 +360,11 @@ window.editPricePrompt = async (productId, oldPrice) => {
 
 // ── DELETE DISH (DELETE /products/{id}) ──
 window.deleteProduct = async (productId) => {
-  if (!confirm(`Haqiqatan ham #${productId} taomni o'chirmoqchimisiz?`)) return;
+  if (!confirm(`Haqiqatan ham #${productId} taomni menyudan o'chirmoqchimisiz?`)) return;
 
   await callApi('DELETE', `/products/${productId}`);
   currentProducts = currentProducts.filter((p) => p.product_id !== productId);
+  productCountBadge.textContent = `${currentProducts.length} taom`;
   renderProductsGrid();
 };
 
@@ -338,13 +375,12 @@ window.addToCart = (productId) => {
 
   currentCart.push(product);
   updateCartView();
-  // Switch to orders tab
   showTab('orders');
 };
 
 function updateCartView() {
   if (currentCart.length === 0) {
-    orderItemsList.innerHTML = `<div class="py-3 text-center text-zinc-500 text-xs">Savat bo'sh. Taom qo'shing.</div>`;
+    orderItemsList.innerHTML = `<div class="py-4 text-center text-zinc-500 text-xs">Savat bo'sh. Menyu bo'limidan taom qo'shing.</div>`;
     orderTotalAmount.textContent = '0 UZS';
     return;
   }
@@ -356,7 +392,7 @@ function updateCartView() {
     const row = document.createElement('div');
     row.className = 'py-2 flex justify-between items-center text-zinc-300';
     row.innerHTML = `
-      <span>${item.name}</span>
+      <span class="font-medium">${item.name}</span>
       <div class="flex items-center gap-2">
         <span class="font-mono text-white font-semibold">${Number(item.price).toLocaleString()} UZS</span>
         <button onclick="removeFromCart(${index})" class="text-zinc-500 hover:text-red-400 p-0.5">
@@ -402,7 +438,7 @@ createOrderBtn.onclick = async () => {
 
   const res = await callApi('POST', '/orders', orderPayload);
   createOrderBtn.disabled = false;
-  createOrderBtn.textContent = 'Buyurtmani jo\'natish (POST /orders)';
+  createOrderBtn.textContent = 'Buyurtmani yuborish (POST /orders)';
 
   const orderId = res.data?.data?.order_id || res.data?.data?.id || Math.floor(1000 + Math.random() * 9000);
   currentActiveOrderId = orderId;
@@ -414,19 +450,21 @@ createOrderBtn.onclick = async () => {
 closeOrderBtn.onclick = async () => {
   if (!currentActiveOrderId) return;
 
+  const paymentTypeId = Number(document.getElementById('paymentTypeSelect').value) || 1;
   closeOrderBtn.disabled = true;
   closeOrderBtn.textContent = 'To\'lov yopilmoqda...';
 
+  const total = currentCart.reduce((sum, item) => sum + item.price, 0) || 48000;
   const payload = {
-    payment_type_id: 1, // Naqd / Karta
-    amount: currentCart.reduce((sum, item) => sum + item.price, 0) || 48000,
+    payment_type_id: paymentTypeId,
+    amount: total,
   };
 
-  const res = await callApi('POST', `/orders/${currentActiveOrderId}/close`, payload);
+  await callApi('POST', `/orders/${currentActiveOrderId}/close`, payload);
   closeOrderBtn.disabled = false;
   closeOrderBtn.textContent = 'To\'lov bilan yopish (POST /orders/{id}/close)';
 
-  alert(`🎉 Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi!`);
+  alert(`🎉 Buyurtma #${currentActiveOrderId} to'lov bilan muvaffaqiyatli yopildi! Kassa kvitansiyasi shakllandi.`);
   currentCart = [];
   updateCartView();
   activeOrderBox.classList.add('hidden');
@@ -461,7 +499,7 @@ tabProductsBtn.onclick = () => showTab('products');
 tabOrdersBtn.onclick = () => showTab('orders');
 tabDictsBtn.onclick = () => showTab('dicts');
 
-// ── MODAL LISTENERS ──
+// ── MODAL ──
 openAddDishModalBtn.onclick = () => {
   addDishModal.classList.remove('hidden');
   addDishModal.classList.add('flex');
@@ -475,15 +513,17 @@ closeAddDishModalBtn.onclick = cancelAddDishBtn.onclick = () => {
 if (currentApiKey) {
   apiKeyInput.value = currentApiKey;
 }
+updateTokenBanner();
 
 saveKeyBtn.onclick = () => {
   currentApiKey = apiKeyInput.value.trim();
   localStorage.setItem('zimzim_api_key', currentApiKey);
+  updateTokenBanner();
   saveKeyBtn.textContent = 'Saqlandi!';
-  saveKeyBtn.className = 'px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold transition-all shrink-0';
+  saveKeyBtn.className = 'px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold transition-all shrink-0';
   setTimeout(() => {
     saveKeyBtn.textContent = 'Saqlash';
-    saveKeyBtn.className = 'px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-all shrink-0';
+    saveKeyBtn.className = 'px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-all shrink-0';
   }, 1500);
   loadProducts();
 };
@@ -493,7 +533,7 @@ toggleKeyVisibility.onclick = () => {
     apiKeyInput.type = 'text';
     toggleKeyVisibility.innerHTML = '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>';
   } else {
-    apiKeyInput.type === 'password';
+    apiKeyInput.type = 'password';
     toggleKeyVisibility.innerHTML = '<i data-lucide="eye" class="w-3.5 h-3.5"></i>';
   }
   refreshIcons();
