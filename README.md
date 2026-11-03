@@ -17,6 +17,8 @@ Siz ushbu ilovaga o'z tashkilotingizning `X-Api-Key` maxfiy tokenini kiritib, to
    - Restoran zali (`place_id`) va stoli (`table_id`)ni tanlash
    - Mehmonlar sonini ko'rsatish
    - Taomlarni interaktiv savatga yig'ib, `POST /orders` so'rovi bilan yangi buyurtma ochish
+   - `GET /orders/{order}` — Buyurtma ma'lumotlari va bosqichini (`state_id`) tekshirish
+   - `PUT /orders/{order}/state` — Buyurtma holatini yangilash (`given`, `delivered`, `canceled`)
    - Ochilgan buyurtmani to'lov turi (Naqd, Karta, Click/Payme) bilan `POST /orders/{id}/close` orqali yopish
 3. **📋 Tizim Ma'lumotnomalari (Dictionaries):**
    - `GET /payment-types` — Qabul qilinadigan to'lov turlari
@@ -80,12 +82,34 @@ python3 -m http.server 3030
 
 ```
 zimzim-merchant-example/
-├── index.html        # Asosiy interaktiv POS & CRUD Dashboard (Pure HTML5)
-├── style.css         # Zamonaviy qorong'i dizayn (Pure CSS)
-├── app.js            # API so'rovlar, savat, konsol va CRUD logikasi (Vanilla JS)
-├── logo.png          # Zim-Zim brend logotipi
-├── favicon.png       # Ilova belgisi
-└── README.md         # To'liq qo'llanma va hujjatlar
+├── index.html            # Asosiy interaktiv POS & CRUD Dashboard (Pure HTML5)
+├── style.css             # Zamonaviy qorong'i dizayn (Pure CSS)
+├── app.js                # API so'rovlar, savat, konsol va CRUD logikasi (Vanilla JS)
+├── hr-webhook-server.js  # HR xodimlar tranzaksiyalari & Webhook qabul qiluvchi Demo Server (Node.js)
+├── logo.png              # Zim-Zim brend logotipi
+├── favicon.png           # Ilova belgisi
+└── README.md             # To'liq qo'llanma va hujjatlar
+```
+
+---
+
+## 👥 HR & Webhooks Demo Server (Node.js)
+
+Zim-Zim tizimida xodimlarning moliyaviy amaliyotlari (`avans`, `oylik`, `jarima`, `bonus`) yuz berganda, serveringizga avtomatik Webhook xabarnomasi yuboriladi. 
+
+Ushbu repozitoriyda HMAC-SHA256 imzosi bilan himoyalangan tayyor webhook server namunasi mavjud (`hr-webhook-server.js`):
+
+```bash
+# Webhook serverni ishga tushirish (tashqi npm kutubxonasiz ishlaydi):
+node hr-webhook-server.js
+```
+
+Server ishga tushgach, avtomatik ravishda tayyor `cURL` test buyrug'ini ekranga chiqaradi:
+```bash
+curl -X POST http://localhost:4000/webhooks/hr \
+  -H "Content-Type: application/json" \
+  -H "X-ZimZim-Signature: <hmac_sha256>" \
+  -d '{"event":"transaction.created","scope":"hr","data":{"transaction_id":"tx_1","employee_name":"Bobur Mirzayev","role":"Bosh Oshpaz","type":"advance","amount":300000}}'
 ```
 
 ---
