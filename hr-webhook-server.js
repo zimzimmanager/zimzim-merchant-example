@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Zim-Zim HR & Merchant Webhook Receiver Demo (v0.2)
+ * Zim-Zim HR & Merchant Webhook Receiver Demo
  * 
  * Ushbu skript Zim-Zim tizimidan yuborilgan HR (xodimlar oylik, avans, jarima, bonus)
  * hamda Buyurtma webhooklarini qabul qilish va HMAC SHA256 imzosini tekshirishni ko'rsatadi.
@@ -43,7 +43,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       status: 'active',
-      service: 'Zim-Zim Webhook Receiver Demo v0.2',
+      service: 'Zim-Zim Webhook Receiver Demo',
       endpoints: {
         hr_webhook: 'POST /webhooks/hr',
         orders_webhook: 'POST /webhooks/orders',
@@ -148,3 +148,4 @@ curl -X POST http://localhost:${PORT}/webhooks/hr \\
   -d '${sampleBody}'
   `);
 });
+
